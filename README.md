@@ -8,11 +8,11 @@ TODO
 
 ## Repository File Description
 
-pip_requirements.txt > Python/pip modules required in order to run the python script (these should be already installed inside the env `pyvenv`)
+pip-requirements.txt > Python/pip modules required in order to run the python script (these should be already installed inside the env `pyvenv`)
 
-os_requirements.txt > operating system (or repository) packets required in order to run the python script
+os-requirements.txt > operating system (or repository) packets required in order to run the python script
 
-## Acknoledgments
+## Acknowledgments
 
 TODO
 
