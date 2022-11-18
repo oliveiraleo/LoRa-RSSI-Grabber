@@ -67,6 +67,8 @@ class LoraEndDevice:
         self.sendMessage(cmd)
         self.printLstAnswer()
 
+#TODO Move all device functions to its class
+
 # Safely ends the script
 def killScript():
     endDevice.closeSerialPort()
@@ -83,8 +85,8 @@ def getDeviceUpdatedRSSI():
     answer = endDevice.getLstAnswer() #.splitlines()
     answerData = map(int, re.findall('-?\d+', answer))
     RSSIFullData = list(answerData) # last, min, max, avg (NOTE: since last reset/reboot)
-    print("answer:", answer) #DEBUG
-    print("answerData:", answerData) #DEBUG
+    # print("answer:", answer) #DEBUG
+    # print("answerData:", answerData) #DEBUG
     print("RSSIFullData", RSSIFullData) #DEBUG
     lastPktRSSI = RSSIFullData[0]
     
@@ -113,20 +115,46 @@ def checkJoinStatus():
     # endDevice.printLstAnswer() #DEBUG
     answer_data = endDevice.getLstAnswer()
     data = returnFilteredINTs(answer_data)
-    status = data[0]
-    if status == 0:
-        return False
-    elif status == 1:
-        return True
-    else:
+    try:
+        status = data[0]
+        if status == 0:
+            return False
+        elif status == 1:
+            return True
+    except:
         print("Error aquiring join status! Please, check the serial connection")
         killScript()
         return None
 
+def main_menu():
+    print("-Script Main Menu-")
+    option = print_menu_options()
+    # while option != 0:
+    if option == 0:
+        print("[INFO] User asked to exit... Bye!")
+        killScript()
+    elif option == 1:
+        # sendLoRaJoinRequest()
+        print("Join request selected!")
+    elif option == 2:
+        # checkJoinStatus()
+        print("Join status selected!")
+    else:
+        print("[ERROR] An invalid option was choosen, please try again")
+        main_menu()
+
+def print_menu_options():
+    print("Please, choose an option:")
+    print("\
+1- Send a join request\n\
+2- Get the join status\n\
+3- Start sending the control packets\n\
+0- Exit the program")
+    opt = input("\nYour option: ")
+    return int(opt)
+
 #TODO Create the main function and keep refactoring the code to separate and modularize it
 #TODO Create the main menu to help the user control the program
-#TODO Create a function to get the join status, if not joined, then send join request
-# (NOTE: cmd->AT+NJS => if 0, not joined, if 1, successfully joined)
 #TODO If rssi still fails, try using AT+NLC (see manual)
 # Vars / Pre setup #
 endDevice = LoraEndDevice() # instantiate the ED object
@@ -142,74 +170,76 @@ delayBetweenPkt_sec = 3*60 #TODO Update the delay to adhere to maximum duty time
 HOST = 'localhost'  # The server's hostname or IP address (to get  the GPS position from)
 PORT = 20175        # The port used by the server
 
-#TODO Create a way to auto join the network
-joinned_network = checkJoinStatus()
-# print(joinned_network)
+main_menu()
 
 # sendLoRaJoinRequest()
+# time.sleep(6)
 
-# time.sleep(5)
+#TODO Create a way to auto join the network
+# joinned_network = checkJoinStatus()
+# print(joinned_network)
 
 # endDevice.sendMessage('AT+SEND=0')
 # endDevice.getAtAnswer()
 # endDevice.printLstAnswer()
 
-if joinned_network == False:
-    print("Device didn't join the network yet!")
-    killScript()
+# if joinned_network == False:
+#     print("Device didn't join the network yet!")
+#     killScript()
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    try:
-        s.connect((HOST, PORT))
-        print(f"Successfully connected to {HOST}:{PORT}")
-    except ConnectionRefusedError:
-        print(f"[ERROR] Got \"connection refused\" error while trying to connect to {HOST}:{PORT}")
-        print("[INFO] Make sure you have properly setup the GPS device\n[INFO] Remember to make the port redirect. You can use the command below\nadb forward tcp:20175 tcp:50000\n[INFO] To enable it")
-        killScript()
+# with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+#     try:
+#         s.connect((HOST, PORT))
+#         print(f"Successfully connected to {HOST}:{PORT}")
+#     except ConnectionRefusedError:
+#         print(f"[ERROR] Got \"connection refused\" error while trying to connect to {HOST}:{PORT}")
+#         print("[INFO] Make sure you have properly setup the GPS device\n[INFO] Remember to make the port redirect. You can use the command below\nadb forward tcp:20175 tcp:50000\n[INFO] To enable it")
+#         killScript()
 
-    id=0
-    print("Sending control packets...")
-    while id<5:        
-        try:
-            now = datetime.now()
-            time_hour = now.strftime("%H:%M:%S")
-            data = s.recv(1024).decode("utf-8") #reads 1024 bytes from the buffer and converts it to utf-8 chars
-            full_GPS_data = data.splitlines(0) #splits the data in a list of strings
-            # print(f"full_GPS_data: {full_GPS_data}") #DEBUG
+#     id=0
+#     print("Sending control packets...")
+#     while id<100:        
+#         try:
+#             now = datetime.now()
+#             time_hour = now.strftime("%H:%M:%S")
+#             data = s.recv(1024).decode("utf-8") #reads 1024 bytes from the buffer and converts it to utf-8 chars
+#             full_GPS_data = data.splitlines(0) #splits the data in a list of strings
+#             # print(f"full_GPS_data: {full_GPS_data}") #DEBUG
 
-            pos_pattern = ".GPGGA*" #regex pattern to find the GPGGA GPS data
-            filtered_GPS_data = [x for x in full_GPS_data if re.match(pos_pattern, x)] #matches the pos_pattern pattern using list comprehension
-            # print(f"filtered_GPS_data: {filtered_GPS_data}") #DEBUG
-            position = filtered_GPS_data[0] #gets the first match
+#             pos_pattern = ".GPGGA*" #regex pattern to find the GPGGA GPS data
+#             filtered_GPS_data = [x for x in full_GPS_data if re.match(pos_pattern, x)] #matches the pos_pattern pattern using list comprehension
+#             # print(f"filtered_GPS_data: {filtered_GPS_data}") #DEBUG
+#             position = filtered_GPS_data[0] #gets the first match
 
-            #parses the data retrieved from the phone
-            latitude = pynmea2.parse(position).latitude #latitude using float type (unit: decimal degrees)
-            longitude = pynmea2.parse(position).longitude #longitude using float type (unit: decimal degrees)
-            altitude = pynmea2.parse(position).altitude #altitude in meters, above sea level
-            precision = pynmea2.parse(position).gps_qual #quality of GPS reception (ideally should be = '1')
-            satellites = pynmea2.parse(position).num_sats #number of connected satellites
+#             #parses the data retrieved from the phone
+#             latitude = pynmea2.parse(position).latitude #latitude using float type (unit: decimal degrees)
+#             longitude = pynmea2.parse(position).longitude #longitude using float type (unit: decimal degrees)
+#             altitude = pynmea2.parse(position).altitude #altitude in meters, above sea level
+#             precision = pynmea2.parse(position).gps_qual #quality of GPS reception (ideally should be = '1')
+#             satellites = pynmea2.parse(position).num_sats #number of connected satellites
 
-            endDevice.sendPacketToGateway(id) #sends a packet containing the id inside
-            time.sleep(2)
-            lastRSSI = getDeviceUpdatedRSSI() #RSSI measured by the device
+#             # endDevice.sendPacketToGateway(id) #sends a packet containing the id inside
+#             time.sleep(2)
+#             # lastRSSI = getDeviceUpdatedRSSI() #RSSI measured by the device
+#             lastRSSI = 0
 
-            data_to_send = '[{}] Id:{}, Lat: {}, Lon: {}, Alt:{}, Qual:{}, Sats:{}, RSSI:{}'. \
-            format(time_hour, id, latitude, longitude, altitude, precision, satellites, lastRSSI)
+#             data_to_send = '[{}] Id:{}, Lat: {}, Lon: {}, Alt:{}, Qual:{}, Sats:{}, RSSI:{}'. \
+#             format(time_hour, id, latitude, longitude, altitude, precision, satellites, lastRSSI)
 
-            print(data_to_send) #TODO Write that data into a CSV file
-            # endDevice.sendMessage('AT')
-            # endDevice.printLstAnswer()
+#             print(data_to_send) #TODO Write that data into a CSV file
+#             # endDevice.sendMessage('AT')
+#             # endDevice.printLstAnswer()
         
-            id = id+1
+#             id = id+1
 
-            print(f"Packet {id} sent, sleeping...")
-            time.sleep(5)
-            # time.sleep(delayBetweenPkt_sec)
+#             print(f"Packet {id} sent, sleeping...")
+#             time.sleep(5)
+#             # time.sleep(delayBetweenPkt_sec)
 
-        except KeyboardInterrupt:
-            s.close() #closes the connection to the GPS server
-            print("\n[INFO] User asked to exit... Bye!")
-            killScript()
+#         except KeyboardInterrupt:
+#             s.close() #closes the connection to the GPS server
+#             print("\n[INFO] User asked to exit... Bye!")
+#             killScript()
 
-s.close() #closes the connection to the GPS server
-endDevice.closeSerialPort()
+# s.close() #closes the connection to the GPS server
+# endDevice.closeSerialPort()
