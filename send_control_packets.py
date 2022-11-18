@@ -7,8 +7,6 @@ import traceback
 import re
 
 """
-To use, download the app share GPS and create a USB connection using adb and tcp forward.
-Run: adb forward tcp:20175 tcp:50000
 Some useful messages are commented out with the TAG #DEBUG
 They were commented to avoid console pollution
 """
@@ -110,8 +108,6 @@ class LoraEndDevice:
 
         return lastPktRSSI
 
-#TODO Move all device functions to its class
-
 # Helper functionality / Utilities #
 # Safely ends the script
 def killScript():
@@ -119,30 +115,6 @@ def killScript():
         endDevice.closeSerialPort()
     raise SystemExit(0) # stops the exectution
 
-# def sendLoRaJoinRequest():
-#     endDevice.sendMessage('AT+JOIN')
-#     # endDevice.printLstAnswer()
-
-# def getDeviceUpdatedRSSI():
-#     resetSerialPort()
-#     # time.sleep(1)
-#     endDevice.sendMessage('AT+RSSI')
-#     answer = endDevice.getLstAnswer() #.splitlines()
-#     answerData = map(int, re.findall('-?\d+', answer))
-#     RSSIFullData = list(answerData) # last, min, max, avg (NOTE: since last reset/reboot)
-#     # print("answer:", answer) #DEBUG
-#     # print("answerData:", answerData) #DEBUG
-#     print("RSSIFullData", RSSIFullData) #DEBUG
-#     lastPktRSSI = RSSIFullData[0]
-    
-#     print("lastPktRSSI:", lastPktRSSI) #DEBUG
-
-#     return lastPktRSSI
-
-# def resetSerialPort():
-#     endDevice.closeSerialPort()
-#     time.sleep(2)
-#     endDevice.openSerialPort()
 
 def returnFilteredINTs(data_stream):
     data_stream_list = data_stream.splitlines()
@@ -154,22 +126,6 @@ def returnFilteredINTs(data_stream):
         except ValueError:
             pass
     return filtered_data
-
-# def checkJoinStatus():
-#     endDevice.sendMessage('AT+NJS?')
-#     # endDevice.printLstAnswer() #DEBUG
-#     answer_data = endDevice.getLstAnswer()
-#     data = returnFilteredINTs(answer_data)
-#     try:
-#         status = data[0]
-#         if status == 0:
-#             return False
-#         elif status == 1:
-#             return True
-#     except:
-#         print("[ERROR] Error aquiring join status! Please, check the serial connection")
-#         killScript()
-#         return None
 
 def main_menu():
     print("\n- Script Main Menu -\n")
@@ -258,8 +214,6 @@ def send_control_packets(num_packets_to_send):
                 format(time_hour, id, latitude, longitude, altitude, precision, satellites, lastRSSI)
 
                 print(data_to_send) #TODO Write that data into a CSV file
-                # endDevice.sendMessage('AT')
-                # endDevice.printLstAnswer()
             
                 id = id+1
 
@@ -295,10 +249,6 @@ def main():
         killScript()
 
     main_menu() #calls the program's main menu
-
-# endDevice.sendMessage('AT+SEND=0')
-# endDevice.getAtAnswer()
-# endDevice.printLstAnswer()
 
 # Calls the main function
 if __name__ == "__main__":
