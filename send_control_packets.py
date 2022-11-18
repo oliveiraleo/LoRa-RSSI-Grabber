@@ -4,17 +4,15 @@ import serial
 import pynmea2
 from datetime import datetime
 import traceback
-# import sys, select, os #for loop exit
 import re
 
 """
 To use, download the app share GPS and create a USB connection using adb and tcp forward.
 Run: adb forward tcp:20175 tcp:50000
+Some useful messages are commented out with the TAG #DEBUG
+They were commented to avoid console pollution
 """
 
-
-# 
-# sudo chmod a+rw /dev/ttyUSB0
 class LoraEndDevice:
     def __init__(self):
 
@@ -78,7 +76,7 @@ class LoraEndDevice:
 
     def sendJoinRequest(self):
         self.sendMessage('AT+JOIN')
-        self.printLstAnswer()
+        # self.printLstAnswer() #DEBUG
 
     def checkJoinStatus(self):
         self.sendMessage('AT+NJS?')
@@ -105,10 +103,10 @@ class LoraEndDevice:
         RSSIFullData = list(answerData) # last, min, max, avg (NOTE: since last device reset/reboot)
         # print("answer:", answer) #DEBUG
         # print("answerData:", answerData) #DEBUG
-        print("RSSIFullData", RSSIFullData) #DEBUG
+        # print("RSSIFullData", RSSIFullData) #DEBUG
         lastPktRSSI = RSSIFullData[0]
         
-        print("lastPktRSSI:", lastPktRSSI) #DEBUG
+        # print("lastPktRSSI:", lastPktRSSI) #DEBUG
 
         return lastPktRSSI
 
@@ -117,7 +115,8 @@ class LoraEndDevice:
 # Helper functionality / Utilities #
 # Safely ends the script
 def killScript():
-    endDevice.closeSerialPort()
+    if endDevice != None:
+        endDevice.closeSerialPort()
     raise SystemExit(0) # stops the exectution
 
 # def sendLoRaJoinRequest():
@@ -181,20 +180,20 @@ def main_menu():
         killScript()
     
     elif option == 1:
-        sendLoRaJoinRequest()
+        endDevice.sendJoinRequest()
         print("[INFO] Request sent, waiting the answer for some seconds... ")
         time.sleep(2)
     
     elif option == 2:
-        joinned_network = checkJoinStatus()
+        joinned_network = endDevice.checkJoinStatus()
         if joinned_network == False:
-            print("[INFO] Device didn't join the network yet!")
+            print("[INFO] Device DIDN'T join the network yet!")
         else:
             print("[INFO] Device already joinned the network")
     
     elif option == 3:
         print("How many packets to send?")
-        num_pkts = input("\n\# pkts: ")
+        num_pkts = input("\n# pkts: ")
         send_control_packets(int(num_pkts))
     
     else:
@@ -217,21 +216,12 @@ def send_control_packets(num_packets_to_send):
     delayBetweenPkt_sec = 3*60 #TODO Update the delay to adhere to maximum duty time
     HOST = 'localhost'  # The server's hostname or IP address (to get  the GPS position from)
     PORT = 20175        # The port used by the server
-    
-    endDevice = LoraEndDevice() # instantiate the ED object
-    try:
-        endDevice.openSerialPort()
-    except serial.serialutil.SerialException:
-        traceback.print_exc() # prints the error stack trace
-        print("[ERROR] Error connecting to the serial port!")
-        print(f"[INFO] Please check the serial port permissions using ls.\n[INFO] You can also try to run the command below:\nsudo chmod 666 {endDevice.loraSerial.port}\n[INFO] To change the permission")
-        killScript()
 
     # open up a socket to communicate with the GPS device
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
             s.connect((HOST, PORT))
-            print(f"Successfully connected to {HOST}:{PORT}")
+            print(f"[INFO] Successfully connected to {HOST}:{PORT}")
         except ConnectionRefusedError:
             print(f"[ERROR] Got \"connection refused\" error while trying to connect to {HOST}:{PORT}")
             print("[INFO] Make sure you have properly setup the GPS device\n[INFO] Remember to make the port redirect. You can use the command below\nadb forward tcp:20175 tcp:50000\n[INFO] To enable it")
@@ -262,8 +252,7 @@ def send_control_packets(num_packets_to_send):
 
                 endDevice.sendPacketToGateway(id) #sends a packet containing the id inside
                 time.sleep(2)
-                lastRSSI = getDeviceUpdatedRSSI() #RSSI measured by the device
-                lastRSSI = 0
+                lastRSSI = endDevice.getUpdatedRSSI() #RSSI measured by the device
 
                 data_to_send = '[{}] Id:{}, Lat: {}, Lon: {}, Alt:{}, Qual:{}, Sats:{}, RSSI:{}'. \
                 format(time_hour, id, latitude, longitude, altitude, precision, satellites, lastRSSI)
@@ -274,10 +263,16 @@ def send_control_packets(num_packets_to_send):
             
                 id = id+1
 
-                print(f"Packet {id} sent, sleeping...")
+                print(f"[INFO] Packet {id} sent, sleeping...")
                 time.sleep(5)
                 # time.sleep(delayBetweenPkt_sec)
 
+            except IndexError:
+                s.close()
+                traceback.print_exc() # prints the error stack trace
+                print("\n[ERROR] Failed to get the GPS data\n[INFO] Please check the USB connection to the phone")
+                killScript()
+            
             except KeyboardInterrupt:
                 s.close() #closes the connection to the GPS server
                 print("\n[INFO] User asked to exit... Bye!")
@@ -286,8 +281,18 @@ def send_control_packets(num_packets_to_send):
     s.close() #closes the connection to the GPS server
     endDevice.closeSerialPort()
 
+# Global Vars #
+endDevice = LoraEndDevice() # instantiate the ED object
+
 def main():
     #TODO If rssi still fails, try using AT+NLC (see manual)
+    try:
+        endDevice.openSerialPort()
+    except serial.serialutil.SerialException:
+        traceback.print_exc() # prints the error stack trace
+        print("[ERROR] Error connecting to the serial port!")
+        print(f"[INFO] Please check the serial port permissions using ls.\n[INFO] You can also try to run the command below:\nsudo chmod 666 {endDevice.loraSerial.port}\n[INFO] To change the permission")
+        killScript()
 
     main_menu() #calls the program's main menu
 
