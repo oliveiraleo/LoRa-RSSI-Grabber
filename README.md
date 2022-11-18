@@ -23,7 +23,7 @@ TODO
 - Any GNU/Linux Operating System (e.g. Debian, Ubuntu, etc)
 - A BASH shell
 - The packets inside the files [pip-requirements.txt](./pip-requirements.txt) & [os-requirements.txt](./os-requirements.txt)**
-- An android GPS-enabled phone
+- An android GPS-enabled phone (see the subsection below)
 - A LoRa End Device (e.g. Multitech mDot)  <!-- TODO specify the device model here -->
 
 
@@ -33,40 +33,40 @@ TODO Finish this subsection
 
 ### Configuring the GPS receiver
 
-### 1- Install the app called [Share GPS](https://play.google.com/store/apps/details?id=com.jillybunch.shareGPS) from Google PlayStore
+#### 1- Install the app called [Share GPS](https://play.google.com/store/apps/details?id=com.jillybunch.shareGPS) from Google PlayStore
 
-### 2- Open the APP and give the required permissions
+#### 2- Open the app and give the required permissions
 
-### 3- Head to the `CONNNECTIONS` tab
+#### 3- Head to the `CONNNECTIONS` tab
 
-### 3.1- Click on the `ADD` button
+#### 3.1- Click on the `ADD` button
 
-### 3.2- On the new screen, configure equals to the list below:
+#### 3.2- On the new screen, configure equals to the list below:
 
 - **Activity:** Share my GPS with a laptop...using NMEA
 - **Connection Method:** Use USB to send NMEA or host a GPSD server
 - **Name:** PC (choose anything memorable)
 
-### 3.3- Click `NEXT`
+#### 3.3- Click `NEXT`
 
-### 3.4- Leave the `Port` attribute at 50000 and hit `OK`
+#### 3.4- Leave the `Port` attribute at 50000 and hit `OK`
 
-### 4- Back on the main screen, click on 3-dot menu to open Settings
+#### 4- Back on the main screen, click on 3-dot menu to open Settings
 
-### 4.1- Enable the option `Create NMEA`
+#### 4.1- Enable the option `Create NMEA`
 
-### 4.2- Go back to the previous screen
+#### 4.2- Go back to the previous screen
 
-### 5- Click once on the connection name (e.g. PC)
+#### 5- Click once on the connection name (e.g. PC)
 
-### 5.1- Now the status must be changed from `Idle` (blue) to `Listening` (yellow)
+#### 5.1- Now the status must be changed from `Idle` (blue) to `Listening` (yellow)
 
-### 5.2- The phone is ready to be connected via USB now
+#### 5.2- The phone is ready to be connected via USB now
 
 
 **NOTE:** The status on `GPS STATUS` tab should be 3D Fix (green), if not, try to go to an outdoor place for some minutes or until the phone locks the position
 
-**NOTE2:** To normal usage, just open the APP and follow the step 5 again
+**NOTE2:** To normal usage, just open the app and follow the step 5 again
 
 ## Running the program on Linux-based systems
 
