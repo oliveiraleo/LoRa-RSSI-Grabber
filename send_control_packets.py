@@ -39,19 +39,28 @@ class LoraEndDevice:
     def closeSerialPort(self):
         self.loraSerial.close()
 
+    # resets the serial connection
+    def resetSerialPort(self):
+        #it clears the connection buffer
+        self.closeSerialPort()
+        time.sleep(2)
+        self.openSerialPort()
+
+    # sends a command to the device
     def sendCmdAt(self,cmd):
         if self.loraSerial.is_open:
             self.loraSerial.write(cmd.encode())
         else:
-            print('It\'s not possible to communicate with LoRa module!')
+            print("[ERROR] It\'s not possible to communicate with LoRa module!")
 
     def getAtAnswer(self):
         self.lastAtCmdRx = self.loraSerial.read(100)
 
-    # gets the answer of device's serial port (e.g. the messages you see when using minicom)
+    # prints the answer of device's serial port (i.e. the messages you see when using minicom)
     def printLstAnswer(self):
         print(self.lastAtCmdRx.decode('UTF-8'))
-
+    
+    # gets the answer of device's serial port (i.e. the messages you see when using minicom)
     def getLstAnswer(self):
         data = self.lastAtCmdRx.decode('UTF-8')
         return data
@@ -67,37 +76,74 @@ class LoraEndDevice:
         self.sendMessage(cmd)
         self.printLstAnswer()
 
+    def sendJoinRequest(self):
+        self.sendMessage('AT+JOIN')
+        self.printLstAnswer()
+
+    def checkJoinStatus(self):
+        self.sendMessage('AT+NJS?')
+        # self.printLstAnswer() #DEBUG
+        answer_data = self.getLstAnswer()
+        data = returnFilteredINTs(answer_data)
+        try:
+            status = data[0]
+            if status == 0:
+                return False
+            elif status == 1:
+                return True
+        except:
+            print("[ERROR] Error aquiring join status! Please, check the serial connection")
+            killScript()
+            return None
+
+    # returns the last measured RSSI
+    def getUpdatedRSSI(self):
+        self.resetSerialPort()
+        self.sendMessage('AT+RSSI')
+        answer = self.getLstAnswer()
+        answerData = map(int, re.findall('-?\d+', answer)) # uses regex to filter the output
+        RSSIFullData = list(answerData) # last, min, max, avg (NOTE: since last device reset/reboot)
+        # print("answer:", answer) #DEBUG
+        # print("answerData:", answerData) #DEBUG
+        print("RSSIFullData", RSSIFullData) #DEBUG
+        lastPktRSSI = RSSIFullData[0]
+        
+        print("lastPktRSSI:", lastPktRSSI) #DEBUG
+
+        return lastPktRSSI
+
 #TODO Move all device functions to its class
 
+# Helper functionality / Utilities #
 # Safely ends the script
 def killScript():
     endDevice.closeSerialPort()
     raise SystemExit(0) # stops the exectution
 
-def sendLoRaJoinRequest():
-    endDevice.sendMessage('AT+JOIN')
-    # endDevice.printLstAnswer()
+# def sendLoRaJoinRequest():
+#     endDevice.sendMessage('AT+JOIN')
+#     # endDevice.printLstAnswer()
 
-def getDeviceUpdatedRSSI():
-    resetSerialPort()
-    # time.sleep(1)
-    endDevice.sendMessage('AT+RSSI')
-    answer = endDevice.getLstAnswer() #.splitlines()
-    answerData = map(int, re.findall('-?\d+', answer))
-    RSSIFullData = list(answerData) # last, min, max, avg (NOTE: since last reset/reboot)
-    # print("answer:", answer) #DEBUG
-    # print("answerData:", answerData) #DEBUG
-    print("RSSIFullData", RSSIFullData) #DEBUG
-    lastPktRSSI = RSSIFullData[0]
+# def getDeviceUpdatedRSSI():
+#     resetSerialPort()
+#     # time.sleep(1)
+#     endDevice.sendMessage('AT+RSSI')
+#     answer = endDevice.getLstAnswer() #.splitlines()
+#     answerData = map(int, re.findall('-?\d+', answer))
+#     RSSIFullData = list(answerData) # last, min, max, avg (NOTE: since last reset/reboot)
+#     # print("answer:", answer) #DEBUG
+#     # print("answerData:", answerData) #DEBUG
+#     print("RSSIFullData", RSSIFullData) #DEBUG
+#     lastPktRSSI = RSSIFullData[0]
     
-    print("lastPktRSSI:", lastPktRSSI) #DEBUG
+#     print("lastPktRSSI:", lastPktRSSI) #DEBUG
 
-    return lastPktRSSI
+#     return lastPktRSSI
 
-def resetSerialPort():
-    endDevice.closeSerialPort()
-    time.sleep(2)
-    endDevice.openSerialPort()
+# def resetSerialPort():
+#     endDevice.closeSerialPort()
+#     time.sleep(2)
+#     endDevice.openSerialPort()
 
 def returnFilteredINTs(data_stream):
     data_stream_list = data_stream.splitlines()
@@ -110,21 +156,21 @@ def returnFilteredINTs(data_stream):
             pass
     return filtered_data
 
-def checkJoinStatus():
-    endDevice.sendMessage('AT+NJS?')
-    # endDevice.printLstAnswer() #DEBUG
-    answer_data = endDevice.getLstAnswer()
-    data = returnFilteredINTs(answer_data)
-    try:
-        status = data[0]
-        if status == 0:
-            return False
-        elif status == 1:
-            return True
-    except:
-        print("[ERROR] Error aquiring join status! Please, check the serial connection")
-        killScript()
-        return None
+# def checkJoinStatus():
+#     endDevice.sendMessage('AT+NJS?')
+#     # endDevice.printLstAnswer() #DEBUG
+#     answer_data = endDevice.getLstAnswer()
+#     data = returnFilteredINTs(answer_data)
+#     try:
+#         status = data[0]
+#         if status == 0:
+#             return False
+#         elif status == 1:
+#             return True
+#     except:
+#         print("[ERROR] Error aquiring join status! Please, check the serial connection")
+#         killScript()
+#         return None
 
 def main_menu():
     print("\n- Script Main Menu -\n")
@@ -151,7 +197,7 @@ def main_menu():
     
     else:
         print("[ERROR] An invalid option was choosen, please try again")
-        # main_menu()
+    
     main_menu()
 
 def print_menu_options():
