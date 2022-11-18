@@ -122,26 +122,37 @@ def checkJoinStatus():
         elif status == 1:
             return True
     except:
-        print("Error aquiring join status! Please, check the serial connection")
+        print("[ERROR] Error aquiring join status! Please, check the serial connection")
         killScript()
         return None
 
 def main_menu():
-    print("-Script Main Menu-")
-    option = print_menu_options()
-    # while option != 0:
+    print("\n- Script Main Menu -\n")
+    option = print_menu_options() #asks for user input
+    
     if option == 0:
         print("[INFO] User asked to exit... Bye!")
         killScript()
+    
     elif option == 1:
-        # sendLoRaJoinRequest()
-        print("Join request selected!")
+        sendLoRaJoinRequest()
+        print("[INFO] Request sent, waiting the answer for some seconds... ")
+        time.sleep(2)
+    
     elif option == 2:
-        # checkJoinStatus()
-        print("Join status selected!")
+        joinned_network = checkJoinStatus()
+        if joinned_network == False:
+            print("[INFO] Device didn't join the network yet!")
+        else:
+            print("[INFO] Device already joinned the network")
+    
+    elif option == 3:
+        print("TODO")
+    
     else:
         print("[ERROR] An invalid option was choosen, please try again")
-        main_menu()
+        # main_menu()
+    main_menu()
 
 def print_menu_options():
     print("Please, choose an option:")
@@ -154,7 +165,6 @@ def print_menu_options():
     return int(opt)
 
 #TODO Create the main function and keep refactoring the code to separate and modularize it
-#TODO Create the main menu to help the user control the program
 #TODO If rssi still fails, try using AT+NLC (see manual)
 # Vars / Pre setup #
 endDevice = LoraEndDevice() # instantiate the ED object
@@ -170,22 +180,11 @@ delayBetweenPkt_sec = 3*60 #TODO Update the delay to adhere to maximum duty time
 HOST = 'localhost'  # The server's hostname or IP address (to get  the GPS position from)
 PORT = 20175        # The port used by the server
 
-main_menu()
-
-# sendLoRaJoinRequest()
-# time.sleep(6)
-
-#TODO Create a way to auto join the network
-# joinned_network = checkJoinStatus()
-# print(joinned_network)
+main_menu() #calls the program's main menu
 
 # endDevice.sendMessage('AT+SEND=0')
 # endDevice.getAtAnswer()
 # endDevice.printLstAnswer()
-
-# if joinned_network == False:
-#     print("Device didn't join the network yet!")
-#     killScript()
 
 # with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 #     try:
