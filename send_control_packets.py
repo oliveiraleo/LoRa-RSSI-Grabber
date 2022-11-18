@@ -5,6 +5,7 @@ import pynmea2
 from datetime import datetime
 import traceback
 import re
+import csv
 
 """
 Some useful messages are commented out with the TAG #DEBUG
@@ -70,7 +71,7 @@ class LoraEndDevice:
     def sendPacketToGateway(self, message):
         cmd = 'AT+SEND=' + str(message)
         self.sendMessage(cmd)
-        self.printLstAnswer()
+        # self.printLstAnswer() #DEBUG
 
     def sendJoinRequest(self):
         self.sendMessage('AT+JOIN')
@@ -115,6 +116,21 @@ def killScript():
         endDevice.closeSerialPort()
     raise SystemExit(0) # stops the exectution
 
+# Creates the CSV file and adds the header to it
+def prepare_file_save(heading):
+    current_date_time = datetime.now()
+    date_time = str(f"{current_date_time.year}-{current_date_time.month}-{current_date_time.day}_{current_date_time.hour}-{current_date_time.minute}-{current_date_time.second}")
+    file_name = date_time + "_LoRa-GPS-RSSI-data" + ".csv"
+
+    write_content(file_name, heading)
+    print("[INFO] Writing data to the file", file_name)
+    return file_name
+
+def write_content(file_name, content):
+    with open(file_name, 'a+') as f: #opens in append mode, creates if not exist
+        write = csv.writer(f)
+        write.writerow(content)
+        #TODO Write inside the logs folder
 
 def returnFilteredINTs(data_stream):
     data_stream_list = data_stream.splitlines()
@@ -170,6 +186,7 @@ def print_menu_options():
 def send_control_packets(num_packets_to_send):
     # Vars / Pre setup #
     delayBetweenPkt_sec = 3*60 #TODO Update the delay to adhere to maximum duty time
+    data_to_store_header = ["Time", "Packet #", "Latitude", "Longitude", "Altitude", "GPS Precision", "# Satellites", "ED RSSI"]
     HOST = 'localhost'  # The server's hostname or IP address (to get  the GPS position from)
     PORT = 20175        # The port used by the server
 
@@ -184,6 +201,7 @@ def send_control_packets(num_packets_to_send):
             killScript()
 
         id = 0 #packet counter
+        file_name = prepare_file_save(data_to_store_header) #creates a new CSV file and returns the file name
 
         print(f"Sending {num_packets_to_send} control packets...")
         while id < num_packets_to_send:
@@ -214,12 +232,16 @@ def send_control_packets(num_packets_to_send):
                 format(time_hour, id, latitude, longitude, altitude, precision, satellites, lastRSSI)
 
                 print(data_to_send) #TODO Write that data into a CSV file
+
+                data_to_store = [time_hour, id, latitude, longitude, altitude, precision, satellites, lastRSSI]
+                write_content(file_name, data_to_store)
             
-                id = id+1
+                id = id+1 #increments the couter
 
                 print(f"[INFO] Packet {id} sent, sleeping...")
                 time.sleep(5)
                 # time.sleep(delayBetweenPkt_sec)
+                #TODO Send a query to the storage API
 
             except IndexError:
                 s.close()
@@ -240,6 +262,7 @@ endDevice = LoraEndDevice() # instantiate the ED object
 
 def main():
     #TODO If rssi still fails, try using AT+NLC (see manual)
+    #TODO Get the GW RSSI by MQTT service endpoint
     try:
         endDevice.openSerialPort()
     except serial.serialutil.SerialException:
