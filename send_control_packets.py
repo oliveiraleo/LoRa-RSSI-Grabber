@@ -231,7 +231,7 @@ def send_control_packets(num_packets_to_send):
                 data_to_send = '[{}] Id:{}, Lat: {}, Lon: {}, Alt:{}, Qual:{}, Sats:{}, RSSI:{}'. \
                 format(time_hour, id, latitude, longitude, altitude, precision, satellites, lastRSSI)
 
-                print(data_to_send) #TODO Write that data into a CSV file
+                print(data_to_send)
 
                 data_to_store = [time_hour, id, latitude, longitude, altitude, precision, satellites, lastRSSI]
                 write_content(file_name, data_to_store)
@@ -248,6 +248,11 @@ def send_control_packets(num_packets_to_send):
                 traceback.print_exc() # prints the error stack trace
                 print("\n[ERROR] Failed to get the GPS data\n[INFO] Please check the USB connection to the phone")
                 killScript()
+
+            except serial.serialutil.PortNotOpenError:
+                print("[INFO] Opening the serial connection again...")
+                endDevice.openSerialPort()
+                print("[INFO] Serial port connection successfully reconnected")
             
             except KeyboardInterrupt:
                 s.close() #closes the connection to the GPS server
