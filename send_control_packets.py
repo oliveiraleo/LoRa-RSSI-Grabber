@@ -118,20 +118,24 @@ def killScript():
     raise SystemExit(0) # stops the exectution
 
 # Creates the CSV file and adds the header to it
-def prepare_file_save(heading):
+def prepare_CSV_file_save(heading):
     current_date_time = datetime.now()
     date_time = str(f"{current_date_time.year}-{current_date_time.month}-{current_date_time.day}_{current_date_time.hour}-{current_date_time.minute}-{current_date_time.second}")
-    file_name = date_time + "_LoRa-GPS-RSSI-data" + ".csv"
+    file_name = date_time + "_LoRa-Deice-GPS-RSSI-data.csv"
 
-    write_content(file_name, heading)
+    write_CSV_content(file_name, heading)
     print("[INFO] Writing data to the file", file_name)
     return file_name
 
-def write_content(file_name, content):
+def write_CSV_content(file_name, content):
     with open(file_name, 'a+') as f: #opens in append mode, creates if not exist
         write = csv.writer(f)
         write.writerow(content)
         #TODO Write inside the logs folder
+
+def write_TXT_content(file_name, content):
+    with open(file_name, 'w') as output:
+        output.write(content)
 
 def open_serial_port():
     try:
@@ -203,7 +207,8 @@ def call_storage_API(num_packets, app_name, key, q_type, file_name):
     #NOTE: Adapt the URL below according to your neeeds
     #Reference: https://www.thethingsindustries.com/docs/integrations/storage/retrieve/
 
-    api_file_name = file_name.split('.')[0] + '.txt'
+    clean_file_name = file_name.split('_') #splits the filename in parts
+    api_file_name = clean_file_name[0] + '_' + clean_file_name[1] + "_Storage-API-data.txt" #gets only date + time and adds the name
     
     headers = {
         'Authorization': f'Bearer {key}',
@@ -213,7 +218,7 @@ def call_storage_API(num_packets, app_name, key, q_type, file_name):
     api_response = requests.get(f'https://nam1.cloud.thethings.network/api/v3/as/applications/{app_name}/packages/storage/{q_type}?limit={num_packets}', headers=headers)
 
     print(f"[INFO] Done downloading API data\n[INFO] Saving to the file {api_file_name}")
-    #TODO save query to local file
+    write_TXT_content(api_file_name, api_response)
 
 # Helper to configure the API parameters or to skip calling it
 def storage_API_menu(packets_sent, file_name):
@@ -254,7 +259,7 @@ def send_control_packets(num_packets_to_send):
             killScript()
 
         id = 0 #packet counter
-        file_name = prepare_file_save(data_to_store_header) #creates a new CSV file and returns the file name
+        file_name = prepare_CSV_file_save(data_to_store_header) #creates a new CSV file and returns the file name
 
         print(f"Sending {num_packets_to_send} control packets...")
         while id < num_packets_to_send:
@@ -287,7 +292,7 @@ def send_control_packets(num_packets_to_send):
                 print(data_to_send)
 
                 data_to_store = [time_hour, id, latitude, longitude, altitude, precision, satellites, lastRSSI]
-                write_content(file_name, data_to_store)
+                write_CSV_content(file_name, data_to_store)
             
                 id = id+1 #increments the couter
 
@@ -320,8 +325,8 @@ def send_control_packets(num_packets_to_send):
 endDevice = LoraEndDevice() # instantiate the ED object
 
 def main():
-    #TODO If rssi still fails, try using AT+NLC (see manual)
-    #TODO Get the GW RSSI by storage service endpoint
+    #NOTE If rssi still fails, try using AT+NLC (see manual)
+    #TODO save output files in folders to avoid clutter
 
     open_serial_port() #tries to connect to the device
 
