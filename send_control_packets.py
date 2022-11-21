@@ -1,11 +1,12 @@
-import socket
+import socket #adds socket connection support
 import time
-import serial
-import pynmea2
+import serial #adds serial connection support
+import pynmea2 #adds NMEA parsing support
 from datetime import datetime
-import traceback
-import re
-import csv
+import traceback #required to get the stack trace
+import re #required to use regex operations
+import csv #to save files
+import requests #required for API query
 
 """
 Some useful messages are commented out with the TAG #DEBUG
@@ -132,6 +133,15 @@ def write_content(file_name, content):
         write.writerow(content)
         #TODO Write inside the logs folder
 
+def open_serial_port():
+    try:
+        endDevice.openSerialPort()
+    except serial.serialutil.SerialException:
+        traceback.print_exc() # prints the error stack trace
+        print("[ERROR] Error connecting to the serial port!")
+        print(f"[INFO] Please check the serial port permissions using ls.\n[INFO] You can also try to run the command below:\nsudo chmod 666 {endDevice.loraSerial.port}\n[INFO] To change the permission")
+        killScript()
+
 def returnFilteredINTs(data_stream):
     data_stream_list = data_stream.splitlines()
     # print(data_stream_list) #DEBUG
@@ -182,6 +192,43 @@ def print_menu_options():
 0- Exit the program")
     opt = input("\nYour option: ")
     return int(opt)
+
+# Calls the TTN Storage API via Curl-like command
+def call_storage_API(num_packets, app_name, key, q_type, file_name):
+    #NOTE: Adapt the URL below according to your neeeds
+    #Reference: https://www.thethingsindustries.com/docs/integrations/storage/retrieve/
+
+    api_file_name = file_name.split('.')[0] + '.txt'
+    
+    headers = {
+        'Authorization': f'Bearer {key}',
+        'Accept': 'text/event-stream',
+    }
+
+    api_response = requests.get(f'https://nam1.cloud.thethings.network/api/v3/as/applications/{app_name}/packages/storage/{q_type}?limit={num_packets}', headers=headers)
+
+    print("[INFO] Done downloading API data\n[INFO] Saving to the file {}")
+
+# Helper to configure the API parameters or to skip calling it
+def storage_API_menu(packets_sent, file_name):
+    api_application_name = "teste-ufjf"
+    api_query_type = "uplink_message"
+
+    print("Do you want to try to connect to the TTN Storage API?\nNOTE: an active internet connection is required")
+    continue_to_call_api = str(input("\nAnswer ([y]es/[n]o): "))
+
+    if continue_to_call_api == 'n' or continue_to_call_api == 'no':
+        print("[INFO] Skipped connecting to the Storage API")
+    elif continue_to_call_api == 'y' or continue_to_call_api == 'yes':
+        print(f"How many packets do you want to get?\nNOTE: It will get the last N packets (i.e. The N more recent packets received by TTN NS)\nSuggestion: {packets_sent}")
+        num_packets_to_get = int(input("\nAnswer (integer): "))
+        print(f"[INFO] Quering the application {api_application_name} for the last {num_packets_to_get} of data type {api_query_type}\nYou must provide your API key now, please.")
+        api_key = str(input("Paste it here: "))
+
+        call_storage_API(num_packets_to_get, api_application_name, api_key, api_query_type, file_name)
+    else:
+        print("[ERROR] Invalid answer, please type 'y' or 'n'")
+        storage_API_menu(packets_sent, file_name)
 
 def send_control_packets(num_packets_to_send):
     # Vars / Pre setup #
@@ -251,7 +298,7 @@ def send_control_packets(num_packets_to_send):
 
             except serial.serialutil.PortNotOpenError:
                 print("[INFO] Opening the serial connection again...")
-                endDevice.openSerialPort()
+                open_serial_port()
                 print("[INFO] Serial port connection successfully reconnected")
             
             except KeyboardInterrupt:
@@ -260,21 +307,18 @@ def send_control_packets(num_packets_to_send):
                 killScript()
 
     s.close() #closes the connection to the GPS server
-    endDevice.closeSerialPort()
+    endDevice.closeSerialPort() #TODO Try to remove that line and test if serial.serialutil.PortNotOpenError exception stops to occur
+
+    storage_API_menu(num_packets_to_send, file_name) #calls the API
 
 # Global Vars #
 endDevice = LoraEndDevice() # instantiate the ED object
 
 def main():
     #TODO If rssi still fails, try using AT+NLC (see manual)
-    #TODO Get the GW RSSI by MQTT service endpoint
-    try:
-        endDevice.openSerialPort()
-    except serial.serialutil.SerialException:
-        traceback.print_exc() # prints the error stack trace
-        print("[ERROR] Error connecting to the serial port!")
-        print(f"[INFO] Please check the serial port permissions using ls.\n[INFO] You can also try to run the command below:\nsudo chmod 666 {endDevice.loraSerial.port}\n[INFO] To change the permission")
-        killScript()
+    #TODO Get the GW RSSI by storage service endpoint
+
+    open_serial_port() #tries to connect to the device
 
     main_menu() #calls the program's main menu
 
