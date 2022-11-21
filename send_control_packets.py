@@ -174,9 +174,14 @@ def main_menu():
             print("[INFO] Device already joinned the network")
     
     elif option == 3:
-        print("How many packets to send?")
-        num_pkts = input("\n# pkts: ")
-        send_control_packets(int(num_pkts))
+        joinned_network = endDevice.checkJoinStatus() #checks if the device is connected to any network before sending packets
+        if joinned_network == False:
+            print("[ERROR] Device DIDN'T join any network yet!")
+            main_menu()
+        else:
+            print("How many packets to send?")
+            num_pkts = input("\n# pkts: ")
+            send_control_packets(int(num_pkts))
     
     else:
         print("[ERROR] An invalid option was choosen, please try again")
