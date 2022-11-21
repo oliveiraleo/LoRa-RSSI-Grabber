@@ -212,7 +212,8 @@ def call_storage_API(num_packets, app_name, key, q_type, file_name):
 
     api_response = requests.get(f'https://nam1.cloud.thethings.network/api/v3/as/applications/{app_name}/packages/storage/{q_type}?limit={num_packets}', headers=headers)
 
-    print("[INFO] Done downloading API data\n[INFO] Saving to the file {}")
+    print(f"[INFO] Done downloading API data\n[INFO] Saving to the file {api_file_name}")
+    #TODO save query to local file
 
 # Helper to configure the API parameters or to skip calling it
 def storage_API_menu(packets_sent, file_name):
@@ -237,7 +238,7 @@ def storage_API_menu(packets_sent, file_name):
 
 def send_control_packets(num_packets_to_send):
     # Vars / Pre setup #
-    delayBetweenPkt_sec = 3*60 #TODO Update the delay to adhere to maximum duty time
+    delayBetweenPkt_sec = 2*60 #NOTE: Delay that adheres to EU's 1% maximum duty cycle on SF12. Use 15*60 for 0.1%. Source: https://github.com/kephas/lora-calculator
     data_to_store_header = ["Time", "Packet #", "Latitude", "Longitude", "Altitude", "GPS Precision", "# Satellites", "ED RSSI"]
     HOST = 'localhost'  # The server's hostname or IP address (to get  the GPS position from)
     PORT = 20175        # The port used by the server
@@ -293,7 +294,6 @@ def send_control_packets(num_packets_to_send):
                 print(f"[INFO] Packet {id} sent, sleeping...")
                 time.sleep(5)
                 # time.sleep(delayBetweenPkt_sec)
-                #TODO Send a query to the storage API
 
             except IndexError:
                 s.close()
