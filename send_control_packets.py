@@ -134,7 +134,7 @@ def write_CSV_content(file_name, content):
         #TODO Write inside the logs folder
 
 def write_TXT_content(file_name, content):
-    with open(file_name, 'w') as output:
+    with open(file_name, 'wb') as output: #writes binary data
         output.write(content)
 
 def open_serial_port():
@@ -187,6 +187,11 @@ def main_menu():
             num_pkts = input("\n# pkts: ")
             send_control_packets(int(num_pkts))
     
+    elif option == 4:
+        print("[INFO] Calling the API in stand alone mode\nPlease, provide a file name to store the data")
+        f_name = str(input("File name: "))
+        storage_API_menu(None, f_name)
+
     else:
         print("[ERROR] An invalid option was choosen, please try again")
     
@@ -198,6 +203,7 @@ def print_menu_options():
 1- Send a join request\n\
 2- Get the join status\n\
 3- Start sending the control packets\n\
+4- Call the Storage API\n\
 0- Exit the program")
     opt = input("\nYour option: ")
     return int(opt)
@@ -207,8 +213,11 @@ def call_storage_API(num_packets, app_name, key, q_type, file_name):
     #NOTE: Adapt the URL below according to your neeeds
     #Reference: https://www.thethingsindustries.com/docs/integrations/storage/retrieve/
 
-    clean_file_name = file_name.split('_') #splits the filename in parts
-    api_file_name = clean_file_name[0] + '_' + clean_file_name[1] + "_Storage-API-data.txt" #gets only date + time and adds the name
+    try:
+        clean_file_name = file_name.split('_') #splits the filename in parts
+        api_file_name = clean_file_name[0] + '_' + clean_file_name[1] + "_Storage-API-data.txt" #gets only date + time and adds the name
+    except IndexError:
+        api_file_name = file_name
     
     headers = {
         'Authorization': f'Bearer {key}',
@@ -219,7 +228,7 @@ def call_storage_API(num_packets, app_name, key, q_type, file_name):
     api_status = api_response.status_code
 
     if api_status == 200:
-        api_response_data = str(api_response.content)
+        api_response_data = (api_response.content)
 
         print(f"[INFO] Done downloading API data\n[INFO] Saving to the file {api_file_name}")
         write_TXT_content(api_file_name, api_response_data)
