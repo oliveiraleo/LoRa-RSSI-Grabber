@@ -120,8 +120,8 @@ def killScript():
 # Creates the CSV file and adds the header to it
 def prepare_CSV_file_save(heading):
     current_date_time = datetime.now()
-    date_time = str(f"{current_date_time.year}-{current_date_time.month}-{current_date_time.day}_{current_date_time.hour}-{current_date_time.minute}-{current_date_time.second}")
-    file_name = date_time + "_LoRa-Deice-GPS-RSSI-data.csv"
+    date_time = current_date_time.strftime('%Y-%m-%d_%H-%M-%S') #formats the datetime. Reference: https://pythonexamples.org/python-datetime-format/
+    file_name = date_time + "_LoRa-Device-GPS-RSSI-data.csv"
 
     write_CSV_content(file_name, heading)
     print("[INFO] Writing data to the file", file_name)
@@ -216,16 +216,24 @@ def call_storage_API(num_packets, app_name, key, q_type, file_name):
     }
 
     api_response = requests.get(f'https://nam1.cloud.thethings.network/api/v3/as/applications/{app_name}/packages/storage/{q_type}?limit={num_packets}', headers=headers)
+    api_status = api_response.status_code
 
-    print(f"[INFO] Done downloading API data\n[INFO] Saving to the file {api_file_name}")
-    write_TXT_content(api_file_name, api_response)
+    if api_status == 200:
+        api_response_data = str(api_response.content)
+
+        print(f"[INFO] Done downloading API data\n[INFO] Saving to the file {api_file_name}")
+        write_TXT_content(api_file_name, api_response_data)
+        print("[INFO] Data sucessfully written locally")
+        time.sleep(3) #gives some seconds for the user to read the onscreen messages
+    else:
+        print("[ERROR] Failed to connect to the API with the status code", api_status)
 
 # Helper to configure the API parameters or to skip calling it
 def storage_API_menu(packets_sent, file_name):
     api_application_name = "teste-ufjf"
     api_query_type = "uplink_message"
 
-    print("Do you want to try to connect to the TTN Storage API?\nNOTE: an active internet connection is required")
+    print("Do you want to try to connect to the TTN Storage API?\nNOTE: An active internet connection is required")
     continue_to_call_api = str(input("\nAnswer ([y]es/[n]o): "))
 
     if continue_to_call_api == 'n' or continue_to_call_api == 'no':
@@ -233,7 +241,7 @@ def storage_API_menu(packets_sent, file_name):
     elif continue_to_call_api == 'y' or continue_to_call_api == 'yes':
         print(f"How many packets do you want to get?\nNOTE: It will get the last N packets (i.e. The N more recent packets received by TTN NS)\nSuggestion: {packets_sent}")
         num_packets_to_get = int(input("\nAnswer (integer): "))
-        print(f"[INFO] Quering the application {api_application_name} for the last {num_packets_to_get} of data type {api_query_type}\nYou must provide your API key now, please.")
+        print(f"[INFO] Quering the application {api_application_name} for the last {num_packets_to_get} packets of data type {api_query_type}\nYou must provide your API key now, please.")
         api_key = str(input("Paste it here: "))
 
         call_storage_API(num_packets_to_get, api_application_name, api_key, api_query_type, file_name)
