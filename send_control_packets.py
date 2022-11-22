@@ -143,7 +143,7 @@ def open_serial_port():
     except serial.serialutil.SerialException:
         traceback.print_exc() # prints the error stack trace
         print("[ERROR] Error connecting to the serial port!")
-        print(f"[INFO] Please check the serial port permissions using ls.\n[INFO] You can also try to run the command below:\nsudo chmod 666 {endDevice.loraSerial.port}\n[INFO] To change the permission")
+        print(f"[INFO] Please check if the USB serial cable is correctly connected\n[INFO] Or the serial port permissions using ls.\n[INFO] You can also try to run the command below:\nsudo chmod 666 {endDevice.loraSerial.port}\n[INFO] To change the permission")
         killScript()
 
 def returnFilteredINTs(data_stream):
@@ -242,13 +242,13 @@ def storage_API_menu(packets_sent, file_name):
     api_application_name = "teste-ufjf"
     api_query_type = "uplink_message"
 
-    print("Do you want to try to connect to the TTN Storage API?\nNOTE: An active internet connection is required")
+    print("Do you want to try to connect to the TTN Storage API?\nNOTE: It might take quite some time for the storage to sync, if needed you can call the API later on\nNOTE 2: An active internet connection is required")
     continue_to_call_api = str(input("\nAnswer ([y]es/[n]o): "))
 
     if continue_to_call_api == 'n' or continue_to_call_api == 'no':
         print("[INFO] Skipped connecting to the Storage API")
     elif continue_to_call_api == 'y' or continue_to_call_api == 'yes':
-        print(f"How many packets do you want to get?\nNOTE: It will get the last N packets (i.e. The N more recent packets received by TTN NS)\nSuggestion: {packets_sent}")
+        print(f"How many packets do you want to get?\nNOTE: It will get the last N packets (i.e. The N more recent packets received by TTN NS)\nSuggested value: {packets_sent}")
         num_packets_to_get = int(input("\nAnswer (integer): "))
         print(f"[INFO] Quering the application {api_application_name} for the last {num_packets_to_get} packets of data type {api_query_type}\nYou must provide your API key now, please.")
         api_key = str(input("Paste it here: "))
@@ -261,7 +261,7 @@ def storage_API_menu(packets_sent, file_name):
 def send_control_packets(num_packets_to_send):
     # Vars / Pre setup #
     delayBetweenPkt_sec = 2*60 #NOTE: Delay that adheres to EU's 1% maximum duty cycle on SF12. Use 15*60 for 0.1%. Source: https://github.com/kephas/lora-calculator
-    data_to_store_header = ["Time", "Packet #", "Latitude", "Longitude", "Altitude", "GPS Precision", "# Satellites", "ED RSSI"]
+    data_to_store_header = ["Time", "id", "Latitude", "Longitude", "Altitude", "GPS Precision", "# Satellites", "ED RSSI"]
     HOST = 'localhost'  # The server's hostname or IP address (to get  the GPS position from)
     PORT = 20175        # The port used by the server
 
@@ -299,8 +299,8 @@ def send_control_packets(num_packets_to_send):
                 precision = pynmea2.parse(position).gps_qual #quality of GPS reception (should be = '1')
                 satellites = pynmea2.parse(position).num_sats #number of connected satellites (the higher, the better)
 
-                endDevice.sendPacketToGateway(id) #sends a packet containing the id inside
-                time.sleep(2)
+                endDevice.sendPacketToGateway(time_hour) #sends a packet containing the time_hour inside its payload
+                time.sleep(3)
                 lastRSSI = endDevice.getUpdatedRSSI() #RSSI measured by the device
 
                 data_to_send = '[{}] Id:{}, Lat: {}, Lon: {}, Alt:{}, Qual:{}, Sats:{}, RSSI:{}'. \
