@@ -17,7 +17,7 @@ def process_raw_data(data, file_name_to_save):
         if elem != '':
             j_list.append(elem)
 
-    header = ['id', 'GW rssi'] #header for the CSV file
+    header = ['id', 'GW RSSI'] #header for the CSV file
     clean_file_name = file_name_to_save.split('_')
     file_name = clean_file_name[0] + '_' + clean_file_name[1] + '_LoRa-RSSI-GW-decoded.csv'
     
