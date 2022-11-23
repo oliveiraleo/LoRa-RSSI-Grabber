@@ -161,6 +161,7 @@ def main_menu():
     print("\n- Script Main Menu -\n")
     option = print_menu_options() #asks for user input
     
+    open_serial_port() #connects to the device via Serial Port
     if option == 0:
         print("[INFO] User asked to exit... Bye!")
         killScript()
@@ -183,9 +184,13 @@ def main_menu():
             print("[ERROR] Device DIDN'T join any network yet!")
             main_menu()
         else:
+            print("[INFO] If you need to get the GW data on the fly, don't forget to connect to the MQTT end point!\n")
+            time.sleep(3)
             print("How many packets to send?")
             num_pkts = input("\n# pkts: ")
-            send_control_packets(int(num_pkts))
+            print("Which one will be the first number sent via payload (used as id)?\nNOTE: The id will be used as the key to join the GW retrieved data later on")
+            first_id_pkts = input("\nStarting # of id: ")
+            send_control_packets(int(num_pkts), int(first_id_pkts))
     
     elif option == 4:
         print("[INFO] Calling the API in stand alone mode\nPlease, provide a file name to store the data")
@@ -195,6 +200,7 @@ def main_menu():
     else:
         print("[ERROR] An invalid option was choosen, please try again")
     
+    endDevice.closeSerialPort() #disconnects the Serial Port
     main_menu()
 
 def print_menu_options():
@@ -258,7 +264,7 @@ def storage_API_menu(packets_sent, file_name):
         print("[ERROR] Invalid answer, please type 'y' or 'n'")
         storage_API_menu(packets_sent, file_name)
 
-def send_control_packets(num_packets_to_send):
+def send_control_packets(num_packets_to_send, first_id):
     # Vars / Pre setup #
     delayBetweenPkt_sec = 2*60 #NOTE: Delay that adheres to EU's 1% maximum duty cycle on SF12. Use 15*60 for 0.1%. Source: https://github.com/kephas/lora-calculator
     data_to_store_header = ["Time", "id", "Latitude", "Longitude", "Altitude", "GPS Precision", "# Satellites", "ED RSSI"]
@@ -275,11 +281,14 @@ def send_control_packets(num_packets_to_send):
             print("[INFO] Make sure you have properly setup the GPS device\n[INFO] Remember to make the port redirect. You can use the command below\nadb forward tcp:20175 tcp:50000\n[INFO] To enable it")
             killScript()
 
-        id = 0 #packet counter
+        id = first_id #packet counter
+        num_pkts_to_send_with_offset = num_packets_to_send + first_id #adds the offset to the upper limit
+
         file_name = prepare_CSV_file_save(data_to_store_header) #creates a new CSV file and returns the file name
 
-        print(f"Sending {num_packets_to_send} control packets...")
-        while id < num_packets_to_send:
+        print(f"[INFO] Sending {num_packets_to_send} control packets...")
+        time_sending_start = time.time()
+        while id < num_pkts_to_send_with_offset: 
             try:
                 now = datetime.now()
                 time_hour = now.strftime("%H:%M:%S")
@@ -299,23 +308,26 @@ def send_control_packets(num_packets_to_send):
                 precision = pynmea2.parse(position).gps_qual #quality of GPS reception (should be = '1')
                 satellites = pynmea2.parse(position).num_sats #number of connected satellites (the higher, the better)
 
-                endDevice.sendPacketToGateway(time_hour) #sends a packet containing the time_hour inside its payload
-                time.sleep(3)
+                endDevice.sendPacketToGateway(id) #sends a packet containing the id counter inside its payload
+                #NOTE: Using less than 3 secs below results in inconsistent serial connection
+                time.sleep(3) #cooldown timer for the device to record the measured data
                 lastRSSI = endDevice.getUpdatedRSSI() #RSSI measured by the device
 
                 data_to_send = '[{}] Id:{}, Lat: {}, Lon: {}, Alt:{}, Qual:{}, Sats:{}, RSSI:{}'. \
                 format(time_hour, id, latitude, longitude, altitude, precision, satellites, lastRSSI)
 
-                print(data_to_send)
+                print(data_to_send) #DEBUG
 
                 data_to_store = [time_hour, id, latitude, longitude, altitude, precision, satellites, lastRSSI]
                 write_CSV_content(file_name, data_to_store)
             
                 id = id+1 #increments the couter
 
-                print(f"[INFO] Packet {id} sent, sleeping...")
-                time.sleep(5)
+                id_with_offset = id - first_id #adds the offset to the id counter
+                print(f"[INFO] Packet {id_with_offset} sent")
+                time.sleep(1)
                 # time.sleep(delayBetweenPkt_sec)
+                #NOTE: Using the sleep above as 3 and 1, each paket takes ~10 seconds to be sent, so the total processing time is ~6 secs
 
             except IndexError:
                 s.close()
@@ -323,20 +335,23 @@ def send_control_packets(num_packets_to_send):
                 print("\n[ERROR] Failed to get the GPS data\n[INFO] Please check the USB connection to the phone")
                 killScript()
 
-            except serial.serialutil.PortNotOpenError:
-                print("[INFO] Opening the serial connection again...")
-                open_serial_port()
-                print("[INFO] Serial port connection successfully reconnected")
+            # except serial.serialutil.PortNotOpenError:
+            #     print("[INFO] Opening the serial connection again...")
+            #     open_serial_port()
+            #     print("[INFO] Serial port connection successfully reconnected")
             
             except KeyboardInterrupt:
                 s.close() #closes the connection to the GPS server
                 print("\n[INFO] User asked to exit... Bye!")
                 killScript()
 
+    time_sending_end = time.time()
+    time_sending_total_secs = round(time_sending_end - time_sending_start)
     s.close() #closes the connection to the GPS server
-    endDevice.closeSerialPort() #TODO Try to remove that line and test if serial.serialutil.PortNotOpenError exception stops to occur
+    # endDevice.closeSerialPort() #TODO Try to remove that line and test if serial.serialutil.PortNotOpenError exception stops to occur.
 
-    storage_API_menu(num_packets_to_send, file_name) #calls the API
+    print(f"[INFO] Packets successfully sent in {time_sending_total_secs} seconds")
+    # storage_API_menu(num_packets_to_send, file_name) #calls the API #NOTE: As the storage sync can take some hours, I decided to remove this call from here
 
 # Global Vars #
 endDevice = LoraEndDevice() # instantiate the ED object
@@ -345,7 +360,7 @@ def main():
     #NOTE If rssi still fails, try using AT+NLC (see manual)
     #TODO save output files in folders to avoid clutter
 
-    open_serial_port() #tries to connect to the device
+    # open_serial_port() #tries to connect to the device
 
     main_menu() #calls the program's main menu
 
