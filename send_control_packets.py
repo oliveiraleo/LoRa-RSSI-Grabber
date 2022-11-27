@@ -104,8 +104,10 @@ class LoraEndDevice:
         # print("answer:", answer) #DEBUG
         # print("answerData:", answerData) #DEBUG
         # print("RSSIFullData", RSSIFullData) #DEBUG
-        lastPktRSSI = RSSIFullData[0]
-        
+        try:
+            lastPktRSSI = RSSIFullData[0]
+        except IndexError:
+            print("[ERROR] Failed to get RSSI data from the device\n[INFO] Try to get data at a lower rate (i.e. increase sleep time)")
         # print("lastPktRSSI:", lastPktRSSI) #DEBUG
 
         return lastPktRSSI
@@ -299,7 +301,7 @@ def send_control_packets(num_packets_to_send, first_id):
                 pos_pattern = ".GPGGA*" #regex pattern to find the GPGGA GPS data
                 filtered_GPS_data = [x for x in full_GPS_data if re.match(pos_pattern, x)] #matches the pos_pattern pattern using list comprehension
                 # print(f"filtered_GPS_data: {filtered_GPS_data}") #DEBUG
-                position = filtered_GPS_data[0] #gets the first match
+                position = filtered_GPS_data[0] #gets the first match (i.e. The most recent data)
 
                 #parses the data retrieved from the phone
                 gps_hour = pynmea2.parse(position).timestamp #time reported by the satellites (timezone: GMT-0)
@@ -355,6 +357,69 @@ def send_control_packets(num_packets_to_send, first_id):
     print(f"[INFO] Packets successfully sent in {time_sending_total_secs} seconds")
     # storage_API_menu(num_packets_to_send, file_name) #calls the API #NOTE: As the storage sync can take some hours, I decided to remove this call from here
 
+def gps_test():
+    # Vars / Pre setup #
+    data_to_store_header = ["Local Time", "GPS Time", "id", "Latitude", "Longitude", "Altitude", "GPS Precision", "# Satellites", "ED RSSI"]
+    HOST = 'localhost'  # The server's hostname or IP address (to get  the GPS position from)
+    PORT = 20175        # The port used by the server
+
+    # open up a socket to communicate with the GPS device
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.connect((HOST, PORT))
+            print(f"[INFO] Successfully connected to {HOST}:{PORT}")
+        except ConnectionRefusedError:
+            traceback.print_exc() # prints the error stack trace
+            raise SystemExit(0)
+            # print(f"[ERROR] Got \"connection refused\" error while trying to connect to {HOST}:{PORT}")
+            # print("[INFO] Make sure you have properly setup the GPS device\n[INFO] Remember to make the port redirect. You can use the command below\nadb forward tcp:20175 tcp:50000\n[INFO] To enable it")
+            # killScript()
+
+        file_name = prepare_CSV_file_save(data_to_store_header) #creates a new CSV file and returns the file name
+
+        id = 0
+        pkt_limit = 700 #NOTE: Adjust this value according to your needs
+        while id < pkt_limit: 
+                now = datetime.now()
+                time_hour = now.strftime("%H:%M:%S")
+                try:
+                    data = s.recv(8192).decode("utf-8") #reads 8192 bytes from the buffer and converts it to utf-8 chars. NOTE: 1024 was too litle as GPS returns many lines of strings (NMEA protocol)
+                    full_GPS_data = data.splitlines(0) #splits the data in a list of strings
+                    # print(f"full_GPS_data: {full_GPS_data}") #DEBUG
+                
+                    pos_pattern = ".GPGGA*" #regex pattern to find the GPGGA GPS data
+                    filtered_GPS_data = [x for x in full_GPS_data if re.match(pos_pattern, x)] #matches the pos_pattern pattern using list comprehension
+                    print(f"filtered_GPS_data: {filtered_GPS_data}") #DEBUG
+                    position = filtered_GPS_data.pop() #gets the last match (i.e. The most recent data)
+
+                    #parses the data retrieved from the phone
+                    gps_hour = pynmea2.parse(position).timestamp
+                    latitude = pynmea2.parse(position).latitude #latitude using float type (unit: decimal degrees)
+                    longitude = pynmea2.parse(position).longitude #longitude using float type (unit: decimal degrees)
+                    altitude = pynmea2.parse(position).altitude #altitude in meters, above sea level
+                    precision = pynmea2.parse(position).gps_qual #quality of GPS reception (should be = '1')
+                    satellites = pynmea2.parse(position).num_sats #number of connected satellites (the higher, the better)
+
+                    lastRSSI = 0 #Not measuring RSSI for now, you can remove that if you want
+
+                    data_to_send = '[{}], Time:{}, Id:{}, Lat: {}, Lon: {}, Alt:{}, Qual:{}, Sats:{}, RSSI:{}'. \
+                    format(time_hour, gps_hour, id, latitude, longitude, altitude, precision, satellites, lastRSSI)
+
+                    print(data_to_send) #DEBUG
+
+                    data_to_store = [time_hour, gps_hour, id, latitude, longitude, altitude, precision, satellites, lastRSSI]
+                    write_CSV_content(file_name, data_to_store)
+                
+                    id = id+1 #increments the couter
+
+                    time.sleep(2)
+                    #NOTE: The sleep above will control the GPS probe frequency, adjust it per your needs
+
+                except IndexError:
+                    print("[ERROR] Error while getting the GPS data!")
+                    s.close()
+                    raise SystemExit(0)
+
 # Global Vars #
 endDevice = LoraEndDevice() # instantiate the ED object
 
@@ -362,7 +427,12 @@ def main():
     #TIP: For environments without active internet connection, you can both get data later on Storaga API or change the function to use the command AT+PING so the GW reports the RSSI via LoRa frames
     #TODO save output files in folders to avoid clutter
 
-    main_menu() #calls the program's main menu
+    try:
+        main_menu() #calls the program's main menu
+        # gps_test() #DEBUG
+    except KeyboardInterrupt: #handles the interruptions by the user
+                print("\n[INFO] User asked to exit... Bye!")
+                raise SystemExit(0) # stops the exectution
 
 # Calls the main function
 if __name__ == "__main__":
