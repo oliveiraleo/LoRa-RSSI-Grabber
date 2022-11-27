@@ -267,7 +267,7 @@ def storage_API_menu(packets_sent, file_name):
 def send_control_packets(num_packets_to_send, first_id):
     # Vars / Pre setup #
     delayBetweenPkt_sec = 2*60 #NOTE: Delay that adheres to EU's 1% maximum duty cycle on SF12. Use 15*60 for 0.1%. Source: https://github.com/kephas/lora-calculator
-    data_to_store_header = ["Time", "id", "Latitude", "Longitude", "Altitude", "GPS Precision", "# Satellites", "ED RSSI"]
+    data_to_store_header = ["Time", "GPS Time", "id", "Latitude", "Longitude", "Altitude", "GPS Precision", "# Satellites", "ED RSSI"]
     HOST = 'localhost'  # The server's hostname or IP address (to get  the GPS position from)
     PORT = 20175        # The port used by the server
 
@@ -292,7 +292,7 @@ def send_control_packets(num_packets_to_send, first_id):
             try:
                 now = datetime.now()
                 time_hour = now.strftime("%H:%M:%S")
-                data = s.recv(1024).decode("utf-8") #reads 1024 bytes from the buffer and converts it to utf-8 chars
+                data = s.recv(8192).decode("utf-8") #reads 8192 bytes from the buffer and converts it to utf-8 chars. NOTE: 1024 was too litle as GPS returns many lines of strings (NMEA protocol)
                 full_GPS_data = data.splitlines(0) #splits the data in a list of strings
                 # print(f"full_GPS_data: {full_GPS_data}") #DEBUG
 
@@ -302,6 +302,7 @@ def send_control_packets(num_packets_to_send, first_id):
                 position = filtered_GPS_data[0] #gets the first match
 
                 #parses the data retrieved from the phone
+                gps_hour = pynmea2.parse(position).timestamp #time reported by the satellites (timezone: GMT-0)
                 latitude = pynmea2.parse(position).latitude #latitude using float type (unit: decimal degrees)
                 longitude = pynmea2.parse(position).longitude #longitude using float type (unit: decimal degrees)
                 altitude = pynmea2.parse(position).altitude #altitude in meters, above sea level
@@ -309,25 +310,26 @@ def send_control_packets(num_packets_to_send, first_id):
                 satellites = pynmea2.parse(position).num_sats #number of connected satellites (the higher, the better)
 
                 endDevice.sendPacketToGateway(id) #sends a packet containing the id counter inside its payload
-                #NOTE: Using less than 3 secs below results in inconsistent serial connection
-                time.sleep(3) #cooldown timer for the device to record the measured data
+                # NOTE: Using less than 2 secs below might result in inconsistent serial connection
+                time.sleep(2) #cooldown timer for the device to record the measured data
                 lastRSSI = endDevice.getUpdatedRSSI() #RSSI measured by the device
 
-                data_to_send = '[{}] Id:{}, Lat: {}, Lon: {}, Alt:{}, Qual:{}, Sats:{}, RSSI:{}'. \
-                format(time_hour, id, latitude, longitude, altitude, precision, satellites, lastRSSI)
+                data_to_send = '[{}], Time:{}, Id:{}, Lat: {}, Lon: {}, Alt:{}, Qual:{}, Sats:{}, RSSI:{}'. \
+                format(time_hour, gps_hour, id, latitude, longitude, altitude, precision, satellites, lastRSSI)
 
                 print(data_to_send) #DEBUG
 
-                data_to_store = [time_hour, id, latitude, longitude, altitude, precision, satellites, lastRSSI]
+                data_to_store = [time_hour, gps_hour, id, latitude, longitude, altitude, precision, satellites, lastRSSI]
                 write_CSV_content(file_name, data_to_store)
             
                 id = id+1 #increments the couter
 
                 id_with_offset = id - first_id #adds the offset to the id counter
                 print(f"[INFO] Packet {id_with_offset} sent")
-                time.sleep(1)
+                # time.sleep(1)
                 # time.sleep(delayBetweenPkt_sec)
                 #NOTE: Using the sleep above as 3 and 1, each paket takes ~10 seconds to be sent, so the total processing time is ~6 secs
+                #NOTE: Using the sleep above as 2 and 0, each paket takes ~8 seconds to be sent, so the total processing time is ~6 secs
 
             except IndexError:
                 s.close()
@@ -357,10 +359,8 @@ def send_control_packets(num_packets_to_send, first_id):
 endDevice = LoraEndDevice() # instantiate the ED object
 
 def main():
-    #NOTE If rssi still fails, try using AT+NLC (see manual)
+    #TIP: For environments without active internet connection, you can both get data later on Storaga API or change the function to use the command AT+PING so the GW reports the RSSI via LoRa frames
     #TODO save output files in folders to avoid clutter
-
-    # open_serial_port() #tries to connect to the device
 
     main_menu() #calls the program's main menu
 
