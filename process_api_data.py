@@ -28,12 +28,8 @@ def process_raw_data(data, file_name_to_save):
         for elem in j_list: #filters the data of interest and writes it to the CSV file
             dct = json.loads(elem)
             try: #executes the filtering according to the Storage API data format
-                try:
-                    rssi = dct['result']['uplink_message']['rx_metadata'][0]['rssi']
-                    id_base64 = dct['result']['uplink_message']['frm_payload']
-                except KeyError: #ignores the join requests or other data that doesn't contain RSSI on its headers
-                    print("[ERROR] Error parsing some data\n[INFO] Probably it's join request data, ignoring it...")
-                    continue
+                rssi = dct['result']['uplink_message']['rx_metadata'][0]['rssi']
+                id_base64 = dct['result']['uplink_message']['frm_payload']
 
             except KeyError: #if it fails, tries to filter according to the MQTT API data format
                 try:
