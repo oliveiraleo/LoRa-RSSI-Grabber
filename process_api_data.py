@@ -2,6 +2,7 @@ import json
 import csv
 import base64
 
+# Reads the data from the TXT file
 def get_file_data(file_name):
     with open(file_name, "r") as f:
         print("[INFO] Reading the file", file_name)
@@ -9,6 +10,7 @@ def get_file_data(file_name):
     
     return data
 
+# Automated way of processing data, returns the data in a human readable and CSV format
 def process_raw_data(data, file_name_to_save):
     d_list = data.splitlines()
     j_list = []
@@ -19,7 +21,7 @@ def process_raw_data(data, file_name_to_save):
 
     header = ['id', 'GW RSSI'] #header for the CSV file
     clean_file_name = file_name_to_save.split('_')
-    file_name = clean_file_name[0] + '_' + clean_file_name[1] + '_LoRa-RSSI-GW-decoded.csv'
+    file_name = clean_file_name[0] + '_' + clean_file_name[1] + '_LoRa-RSSI-GW-decoded.csv' #gets only date + time and adds the suffix to the name
     
     with open(file_name, 'w+') as f:
         write = csv.writer(f) #creates a reader object
@@ -43,10 +45,11 @@ def process_raw_data(data, file_name_to_save):
                 print("[ERROR] Couldn't parse data! Please, check if you choose the correct file")
                 raise SystemExit(0)
 
+            #decodes the payload (which is the id)
             id_b64_encoded = id_base64.encode('ascii')
             id = base64.b64decode(id_b64_encoded).decode('ascii')
 
-            data_line = [str(id), str(rssi)]
+            data_line = [str(id), str(rssi)] #joins the data to be saved
             write.writerow(data_line)
 
         print(f"[INFO] File {file_name} saved successfully")
@@ -58,9 +61,6 @@ def menu():
     file_data_raw = get_file_data(file_name)
     process_raw_data(file_data_raw, file_name)
 
-def main():
-    menu() #TODO add some commets to explain what is happening here
-
 # Calls the main function
 if __name__ == "__main__":
-    main()
+    menu()
