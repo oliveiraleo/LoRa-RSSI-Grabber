@@ -1,3 +1,5 @@
 python>=3.10.8
 python-pip>=22.3
 mosquitto>=2.0.15
+android-tools>=33.0.3p1
+adb>=1.0.41
