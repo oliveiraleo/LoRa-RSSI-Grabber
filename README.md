@@ -10,13 +10,13 @@ TODO
 
 \- `send_position.py`: This is the legacy source code obtained from the [original repo](https://github.com/mateusomattos/loraLTA)
 
-\- `send_control_packets.py`: Python script that contains the project's functionality (Take a look at the section `Project Description`)
+\- `send_control_packets.py`: Python script that contains the project's main functionality (Take a look at the section `Project Description`)
 
 \- `pip-requirements.txt`: Python/pip modules required in order to run the python script (these should be already installed inside the env `pyvenv`)
 
 \- `os-requirements.txt`: Operating system packets* required in order to run the python script
 
-\* It's recommended to obtain these packets from your distro's official repositories (which is usually done through a packet manager (e.g APT) )
+\* It's recommended to obtain these packets from your distro's official repositories (which is usually done through a packet manager (e.g. APT, DNF, Pacman, etc) )
 
 ## Requirements
 
@@ -26,47 +26,13 @@ TODO
 - An android GPS-enabled phone (see the subsection below)
 - A LoRa End Device (e.g. Multitech mDot)  <!-- TODO specify the device model here -->
 
-
 ** Each file contains the name of the package and the version required in order to run correctly
 
 TODO Finish this subsection
 
 ### Configuring the GPS receiver
 
-#### 1- Install the app called [Share GPS](https://play.google.com/store/apps/details?id=com.jillybunch.shareGPS) from Google PlayStore
-
-#### 2- Open the app and give the required permissions
-
-#### 3- Head to the `CONNNECTIONS` tab
-
-#### 3.1- Click on the `ADD` button
-
-#### 3.2- On the new screen, configure equals to the list below:
-
-- **Activity:** Share my GPS with a laptop...using NMEA
-- **Connection Method:** Use USB to send NMEA or host a GPSD server
-- **Name:** PC (choose anything memorable)
-
-#### 3.3- Click `NEXT`
-
-#### 3.4- Leave the `Port` attribute at 50000 and hit `OK`
-
-#### 4- Back on the main screen, click on 3-dot menu to open Settings
-
-#### 4.1- Enable the option `Create NMEA`
-
-#### 4.2- Go back to the previous screen
-
-#### 5- Click once on the connection name (e.g. PC)
-
-#### 5.1- Now the status must be changed from `Idle` (blue) to `Listening` (yellow)
-
-#### 5.2- The phone is ready to be connected via USB now
-
-
-**NOTE:** The status on `GPS STATUS` tab should be 3D Fix (green), if not, try to go to an outdoor place for some minutes or until the phone locks the position
-
-**NOTE2:** To normal usage, just open the app and follow the step 5 again
+Please refer to the file [GPS-setup-android.md](./GPS-setup-android.md)
 
 ## Running the program on Linux-based systems
 
@@ -99,6 +65,38 @@ If not already done, please connect the phone (or the GPS receiver) and the LoRa
 ### 6- Follow the onscreen instructions
 
 **NOTE:** Please, be sure the requirements from the section `Requirements` are met in order to correctly run the script
+
+## Workflow
+
+get-mqtt-data > send_control_packets > process_api_data > join_GW_ED_data
+
+TODO create an image/diagram
+
+## Component architecture
+
+TODO put image here
+
+## FAQ
+
+### Q1: What makes your project stand out?
+
+A: It provides a way to obtain RSSI measurements on both sides (ED & GW) of a comunication. TODO: Finish this point
+
+### Q2: The gateway is reporting RSSI correctly but the device measurements are frozen/locked. What is happenning?
+
+A: As you are getting measurements from both sides of the connection (ED & GW), you should send data (uplink) and receive something back on the device (downlink) in order to get signal emissions on both directions and then to be able to get updated RSSI measurements on the device too. Try to enable receiving ACKs if your device supports it.
+
+### Q3: Why the computer can't connect to the android phone?
+
+A: Check that the GPS related steps were succesfully followed. Check that the USB cable is fully operational and the phone allows the computer to reads its data. Then check that the adb program is working and issue the `adb forward` command.
+
+### Q4: Why is the GPS reporting incorrect location data?
+
+A: This can be the result of a couple of things: GPS margin of error (e.g. position estimated error); Some or one app permission not allowed; Android's battery optimization is messing with the app; Phone is in energy saving mode; Bluetooth and/or WiFi location services are enabled; Google High Precision location option is disabled.
+
+### Q5: I'm sure everything is setup correctly but the GPS still reporting incorrect data or it freezes after some time. What else can I do?
+
+A: If your android device is using android 8+, there are [some security implementations](https://developer.android.com/about/versions/oreo/background-location-limits) under the hood that limit the GPS functionality while in background. So please, install the app [Wakey](https://play.google.com/store/apps/details?id=com.doublep.wakey&hl=pt_BR) and don't let your screen go off during the survey. Keep the ShareGPS app onscreen all the time (i.e. don't minimize or close it). If you still face issues, try clicking "Start Track" *before* collecting GPS data (this will create a background service that will try to keep the GPS 'locked' (i.e. will keep requesting precise location every second)). The last attempt is to put the phone in airplane mode (disabling WiFi and Mobile Data), because this will prevent android from getting the approximate location from the carrier network or IP address (instead of the high precision one from GPS receiver) during the survey.
 
 ## Acknowledgments
 
