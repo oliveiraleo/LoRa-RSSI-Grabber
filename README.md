@@ -1,4 +1,4 @@
-# LoRaLTA
+# LoRa-RSSI-Grabber
 
 **NOTE:** This file is in a "work in progress" state, so expect to see some TODOs. The file will be updated and this message removed when everything is done
 
@@ -40,17 +40,17 @@ The instructions are as follows:
 
 ### 1- Clone the repository
 
-<code>git clone https://github.com/oliveiraleo/LoRaLTA.git</code>
+<code>git clone https://github.com/oliveiraleo/LoRaRSSIGrabber.git</code>
 
 ### 2- Enter the project folder
 
-<code>cd LoRaLTA</code>
+<code>cd LoRaRSSIGrabber</code>
 
 ### 3- Load the virtual environment
 
-<code>source pyenv/bin/activate</code>
+<code>source pyvenv/bin/activate</code>
 
-**NOTE:** The BASH console should now display `(pyenv)` on the command line
+**NOTE:** The BASH console should now display `(pyvenv)` on the command line
 
 **OBS:** To exit the env, just issue the command <code>deactivate</code>
 
@@ -92,11 +92,11 @@ A: Check that the GPS related steps were succesfully followed. Check that the US
 
 ### Q4: Why is the GPS reporting incorrect location data?
 
-A: This can be the result of a couple of things: GPS margin of error (e.g. position estimated error); Some or one app permission not allowed; Android's battery optimization is messing with the app; Phone is in energy saving mode; Bluetooth and/or WiFi location services are enabled; Google High Precision location option is disabled.
+A: This can be the result of a couple of things: Poor GPS signal reception (e.g inside an indoor place); GPS margin of error (e.g. position estimated error); Some or one ShareGPS app permission not allowed; Android's battery optimization is messing with the ShareGPS app; Phone is in energy saving mode; Bluetooth and/or WiFi location services (i.e. Wi-Fi & Bluetooth scanning) are enabled; [Google High Precision/Improved](https://support.google.com/android/answer/3467281) location option is disabled.
 
 ### Q5: I'm sure everything is setup correctly but the GPS still reporting incorrect data or it freezes after some time. What else can I do?
 
-A: If your android device is using android 8+, there are [some security implementations](https://developer.android.com/about/versions/oreo/background-location-limits) under the hood that limit the GPS functionality while in background. So please, install the app [Wakey](https://play.google.com/store/apps/details?id=com.doublep.wakey&hl=pt_BR) and don't let your screen go off during the survey. Keep the ShareGPS app onscreen all the time (i.e. don't minimize or close it). If you still face issues, try clicking "Start Track" *before* collecting GPS data (this will create a background service that will try to keep the GPS 'locked' (i.e. will keep requesting precise location every second)). The last attempt is to put the phone in airplane mode (disabling WiFi and Mobile Data), because this will prevent android from getting the approximate location from the carrier network or IP address (instead of the high precision one from GPS receiver) during the survey.
+A: If your android device is running android 8+, there are [some security implementations](https://developer.android.com/about/versions/oreo/background-location-limits) under the hood that limit the GPS functionality while in background. So please, install the app [Wakey](https://play.google.com/store/apps/details?id=com.doublep.wakey&hl=pt_BR) and don't let your screen go off during the survey. Keep the ShareGPS app onscreen all the time (i.e. don't minimize or close it). If you still face issues, try clicking "Start Track" *before* collecting GPS data (this will create a background service that will try to keep the GPS 'locked' (i.e. keeps requesting precise location every second)). The last attempt is to put the phone in airplane mode (disabling WiFi and Mobile Data), because this will prevent android from getting the approximate location from the carrier network or IP address (instead of the high precision one from GPS receiver) during the survey.
 
 ## Acknowledgments
 
