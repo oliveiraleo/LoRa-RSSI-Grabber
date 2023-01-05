@@ -4,7 +4,7 @@
 
 ## Project Description
 
-TODO
+This source code provides a framework that sends control packets and collects RSSI measurements. It is designed to control Multitech`s mDot and xDot LoRa devices using the The Things Network infrastructure as backend. LoRa RSSI Grabber is capable of creating datasets cotaining RSSI measurements, it helped creating [this dataset](https://github.com/oliveiraleo/LoRa-RSSI-dataset-outdoor) and was used as a proof of concept of the first step of a key generation framework called [RSSignal](https://github.com/oliveiraleo/RSSignal-LoRa).
 
 ## Repository File Description
 
@@ -24,11 +24,9 @@ TODO
 - A BASH shell
 - The packets inside the files [pip-requirements.txt](./pip-requirements.txt) & [os-requirements.txt](./os-requirements.txt)**
 - An android GPS-enabled phone (see the subsection below)
-- A LoRa End Device (e.g. Multitech mDot)  <!-- TODO specify the device model here -->
+- A LoRa End Device (e.g. Multitech mDot-915)
 
 ** Each file contains the name of the package and the version required in order to run correctly
-
-TODO Finish this subsection
 
 ### Configuring the GPS receiver
 
@@ -40,11 +38,11 @@ The instructions are as follows:
 
 ### 1- Clone the repository
 
-<code>git clone https://github.com/oliveiraleo/LoRaRSSIGrabber.git</code>
+<code>git clone https://github.com/oliveiraleo/LoRa-RSSI-Grabber.git</code>
 
 ### 2- Enter the project folder
 
-<code>cd LoRaRSSIGrabber</code>
+<code>cd LoRa-RSSI-Grabber</code>
 
 ### 3- Load the virtual environment
 
@@ -64,23 +62,23 @@ If not already done, please connect the phone (or the GPS receiver) and the LoRa
 
 ### 6- Follow the onscreen instructions
 
-**NOTE:** Please, be sure the requirements from the section `Requirements` are met in order to correctly run the script
+**NOTE:** Please, be sure that requirements from the section `Requirements` are met in order to correctly run the script
 
 ## Workflow
 
 get-mqtt-data > send_control_packets > process_api_data > join_GW_ED_data
 
-TODO create an image/diagram
+[TODO] create an image/diagram
 
 ## Component architecture
 
-TODO put image here
+[TODO] put image here
 
 ## FAQ
 
 ### Q1: What makes your project stand out?
 
-A: It provides a way to obtain RSSI measurements on both sides (ED & GW) of a comunication. TODO: Finish this point
+A: It provides a easy and standardized way to obtain RSSI measurements on both sides (ED & GW) of a LoRa communication.
 
 ### Q2: The gateway is reporting RSSI correctly but the device measurements are frozen/locked. What is happenning?
 
@@ -88,7 +86,7 @@ A: As you are getting measurements from both sides of the connection (ED & GW), 
 
 ### Q3: Why the computer can't connect to the android phone?
 
-A: Check that the GPS related steps were succesfully followed. Check that the USB cable is fully operational and the phone allows the computer to reads its data. Then check that the adb program is working and issue the `adb forward` command.
+A: Check that the GPS related steps were successfully followed. Check that the USB cable is fully operational and the phone allows the computer to reads its data. Then check that the adb program is working and issue the `adb forward` command.
 
 ### Q4: Why is the GPS reporting incorrect location data?
 
@@ -98,9 +96,19 @@ A: This can be the result of a couple of things: Poor GPS signal reception (e.g 
 
 A: If your android device is running android 8+, there are [some security implementations](https://developer.android.com/about/versions/oreo/background-location-limits) under the hood that limit the GPS functionality while in background. So please, install the app [Wakey](https://play.google.com/store/apps/details?id=com.doublep.wakey&hl=pt_BR) and don't let your screen go off during the survey. Keep the ShareGPS app onscreen all the time (i.e. don't minimize or close it). If you still face issues, try clicking "Start Track" *before* collecting GPS data (this will create a background service that will try to keep the GPS 'locked' (i.e. keeps requesting precise location every second)). The last attempt is to put the phone in airplane mode (disabling WiFi and Mobile Data), because this will prevent android from getting the approximate location from the carrier network or IP address (instead of the high precision one from GPS receiver) during the survey.
 
+## Citing this work
+
+If you used any of the source code available here, please, cite it as:
+
+[TODO] Waiting for the work to be released to update here
+
+### Latex citation
+
+[TODO] Waiting for the work to be released to update here
+
 ## Acknowledgments
 
-TODO
+The authors would like to thank Mr. Rogerio Casagrande and Mr. Thiago Scher, members of the LTA (Laboratorio de Telecomunicacoes Aplicadas) laboratory from the Engineering Faculty of the [Federal University of Juiz de Fora](https://ufjf.br), for assisting the configuration process and lending the LoRa equipment used during the deployment and test of the framework
 
 ## License
 

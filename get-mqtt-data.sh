@@ -24,7 +24,7 @@ else
     echo "[INFO] Saving the content to the file $FILE_NAME"
 
     echo "[INFO] Connected to the MQTT end point..."
-    mosquitto_sub -h $END_POINT_SERVER -p $MQTT_PORT -u "$APP_NAME@ttn" -P $API_KEY -t $TOPIC_TYPE > $FILE_NAME
+    mosquitto_sub -h $END_POINT_SERVER -p $MQTT_PORT -u "$APP_NAME@ttn" -P $API_KEY -t $TOPIC_TYPE >> $FILE_NAME
     echo "[INFO] Data saved to the file $FILE_NAME"
     echo "[INFO] Don't forget to rename it"
     echo -e "\nDisconnecting... Bye!"
