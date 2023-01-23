@@ -100,11 +100,23 @@ A: If your android device is running android 8+, there are [some security implem
 
 If you used any of the source code available here, please, cite it as:
 
-[TODO] Waiting for the work to be released to update here
+De Oliveira, L. A. (2023). *Arcabouços para Coleta de RSSI e Evolução de Técnicas de Acordo de Chaves em Redes LoRaWAN.* Federal University of Juiz de Fora.
 
 ### Latex citation
 
-[TODO] Waiting for the work to be released to update here
+Or you can use the Latex citation below:
+
+```
+@phdthesis{leonardo2023arcaboucos,
+ title = {Arcabouços para Coleta de RSSI e Evolução de Técnicas de Acordo de Chaves em Redes LoRaWAN},
+ author = {Leonardo Azalim de Oliveira},
+ month = {01},
+ year = {2023},
+ note = {Available at  http://monografias.ice.ufjf.br/tcc-web/tcc?id=724},
+ school = {Federal University of Juiz de Fora},
+ key = {OLIVEIRA,2023}
+}
+```
 
 ## Acknowledgments
 
