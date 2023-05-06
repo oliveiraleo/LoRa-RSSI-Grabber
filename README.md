@@ -38,15 +38,21 @@ The instructions are as follows:
 
 ### 1- Clone the repository
 
-<code>git clone https://github.com/oliveiraleo/LoRa-RSSI-Grabber.git</code>
+```
+git clone https://github.com/oliveiraleo/LoRa-RSSI-Grabber.git
+```
 
 ### 2- Enter the project folder
 
-<code>cd LoRa-RSSI-Grabber</code>
+```
+cd LoRa-RSSI-Grabber
+```
 
 ### 3- Load the virtual environment
 
-<code>source pyvenv/bin/activate</code>
+```
+source pyvenv/bin/activate
+```
 
 **NOTE:** The BASH console should now display `(pyvenv)` on the command line
 
@@ -58,7 +64,9 @@ If not already done, please connect the phone (or the GPS receiver) and the LoRa
 
 ### 5- Run the script using
 
-<code>python send_control_packets.py</code>
+```
+python send_control_packets.py
+```
 
 ### 6- Follow the onscreen instructions
 
