@@ -1,7 +1,5 @@
 # LoRa-RSSI-Grabber
 
-**NOTE:** This file is in a "work in progress" state, so expect to see some TODOs. The file will be updated and this message removed when everything is done
-
 ## Project Description
 
 This source code provides a framework that sends control packets and collects RSSI measurements. It is designed to control Multitech`s mDot and xDot LoRa devices using the The Things Network infrastructure as backend. LoRa RSSI Grabber is capable of creating datasets cotaining RSSI measurements, it helped creating [this dataset](https://github.com/oliveiraleo/LoRa-RSSI-dataset-outdoor) and was used as a proof of concept of the first step of a key generation framework called [RSSignal](https://github.com/oliveiraleo/RSSignal-LoRa).
@@ -56,7 +54,7 @@ source pyvenv/bin/activate
 
 **NOTE:** The BASH console should now display `(pyvenv)` on the command line
 
-**OBS:** To exit the env, just issue the command <code>deactivate</code>
+**TIP:** To exit the env, just issue the command <code>deactivate</code>
 
 ### 4- Connect the equipment to the computer
 
@@ -74,13 +72,18 @@ python send_control_packets.py
 
 ## Workflow
 
-get-mqtt-data > send_control_packets > process_api_data > join_GW_ED_data
+The program works this way:
 
-[TODO] create an image/diagram
+1. Run `get-mqtt-data.sh` to subscribe to the TTN MQTT API (**NOTE:**  *must* run before step 2)
+2. Use `send_control_packets.py` to send the LoRa packets and take it's RSSI
+3. After completing steps 1 & 2, use `process_api_data.py` to extract the packet's ID & RSSI
+4. Execute `join_GW_ED_data.py` in order to get the RSSI measurements put together in one file
 
-## Component architecture
+For a summarized reference, see the image below:
 
-[TODO] put image here
+![Grabber_Workflow](./LoRa-Grabber_workflow.png)
+
+Please, refer to the [previous section](#running-the-program-on-linux-based-systems) too.
 
 ## FAQ
 
@@ -106,7 +109,15 @@ A: If your android device is running android 8+, there are [some security implem
 
 ## Citing this work
 
-If you used any of the source code available here, please, cite it as:
+This source code was used as part of my Computer Science monography:
+
+De Oliveira, L. A. (2023). *Arcabouços para Coleta de RSSI e Evolução de Técnicas de Acordo de Chaves em Redes LoRaWAN.* Federal University of Juiz de Fora.
+
+Which is available [here](http://monografias.ice.ufjf.br/tcc-web/tcc?id=724).
+
+A paper was submitted and is under peer review, as soon as it's ready, I'll update the citation here.
+
+<!--If you used any of the source code available here, please, cite it as:
 
 De Oliveira, L. A. (2023). *Arcabouços para Coleta de RSSI e Evolução de Técnicas de Acordo de Chaves em Redes LoRaWAN.* Federal University of Juiz de Fora.
 
@@ -124,7 +135,7 @@ Or you can use the Latex citation below:
  school = {Federal University of Juiz de Fora},
  key = {OLIVEIRA,2023}
 }
-```
+``` -->
 
 ## Acknowledgments
 
