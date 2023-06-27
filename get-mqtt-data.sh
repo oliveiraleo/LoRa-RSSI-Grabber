@@ -3,7 +3,7 @@
 
 # NOTE: The attribute "frm_payload" will be base64 encoded
 
-END_POINT_SERVER="nam1.cloud.thethings.network"
+END_POINT_SERVER="nam1.cloud.thethings.network" #Adjust if necessary
 MQTT_PORT="1883"
 APP_NAME=$1
 TOPIC_TYPE="#" #See the reference for other options
