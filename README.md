@@ -2,15 +2,15 @@
 
 ## Project Description
 
-This source code provides a framework that sends control packets and collects RSSI measurements. It is designed to control Multitech`s mDot and xDot LoRa devices using the The Things Network infrastructure as backend. LoRa RSSI Grabber is capable of creating datasets cotaining RSSI measurements, it helped creating [this dataset](https://github.com/oliveiraleo/LoRa-RSSI-dataset-outdoor) and was used as a proof of concept of the first step of a key generation framework called [RSSignal](https://github.com/oliveiraleo/RSSignal-LoRa).
+This source code provides a framework that sends control packets and collects RSSI measurements. It is designed to control Multitech`s mDot and xDot LoRa devices using the [The Things Network](https://www.thethingsnetwork.org/) infrastructure as back-end. LoRa RSSI Grabber is capable of creating datasets cotaining RSSI measurements, it helped creating [this dataset](https://github.com/oliveiraleo/LoRa-RSSI-dataset-outdoor) and was used as a proof of concept of the first step of a key generation framework called [RSSignal](https://github.com/oliveiraleo/RSSignal-LoRa).
 
 ## Repository File Description
 
 \- `send_position.py`: This is the legacy source code obtained from the [original repo](https://github.com/mateusomattos/loraLTA)
 
-\- `send_control_packets.py`: Python script that contains the project's main functionality (Take a look at the section `Project Description`)
+\- `send_control_packets.py`: Python script that contains the project's main functionality (take a look at the section `Project Description` above)
 
-\- `pip-requirements.txt`: Python/pip modules required in order to run the python script (these should be already installed inside the env `pyvenv`)
+\- `pip-requirements.txt`: Python/pip modules required in order to run the python script (see the full instructions on the `Creating a venv and installing the requirements` [section](#creating-a-venv-and-installing-the-requirements))
 
 \- `os-requirements.txt`: Operating system packets* required in order to run the python script
 
@@ -21,7 +21,7 @@ This source code provides a framework that sends control packets and collects RS
 - Any GNU/Linux Operating System (e.g. Debian, Ubuntu, etc)
 - A BASH shell
 - The packets inside the files [pip-requirements.txt](./pip-requirements.txt) & [os-requirements.txt](./os-requirements.txt)**
-- An android GPS-enabled phone (see the subsection below)
+- An android GPS-enabled phone (see the [section below](#configuring-the-gps-receiver))
 - A LoRa End Device (e.g. Multitech mDot-915)
 
 ** Each file contains the name of the package and the version required in order to run correctly
@@ -30,23 +30,21 @@ This source code provides a framework that sends control packets and collects RS
 
 Please refer to the file [GPS-setup-android.md](./GPS-setup-android.md)
 
+### Creating a venv and installing the requirements
+
+**NOTE:** The steps of this subsection may be required to run only on the for the first time. Once done, it's possible to skip them.
+
+Please refer to the file [requirements-setup.md](./requirements-setup.md) and then follow the steps below step 2 of the [next](#running-the-program-on-linux-based-systems) subsection
+
 ## Running the program on Linux-based systems
 
 The instructions are as follows:
 
-### 1- Clone the repository
+### 1- Enter the project folder
 
-```
-git clone https://github.com/oliveiraleo/LoRa-RSSI-Grabber.git
-```
+The steps vary according to the place where the project was cloned
 
-### 2- Enter the project folder
-
-```
-cd LoRa-RSSI-Grabber
-```
-
-### 3- Load the virtual environment
+### 2- Load the virtual environment
 
 ```
 source pyvenv/bin/activate
@@ -56,9 +54,15 @@ source pyvenv/bin/activate
 
 **TIP:** To exit the env, just issue the command <code>deactivate</code>
 
-### 4- Connect the equipment to the computer
+### 3- Connect the equipment to the computer
 
 If not already done, please connect the phone (or the GPS receiver) and the LoRa-enabled device
+
+### 4- Connect to the MQTT API
+
+```
+./get-mqtt-data.sh
+```
 
 ### 5- Run the script using
 
@@ -70,11 +74,15 @@ python send_control_packets.py
 
 **NOTE:** Please, be sure that requirements from the section `Requirements` are met in order to correctly run the script
 
+### 7- Process the data
+
+After running the survey, process the data obtained using the `process_api_data.py` and `join_GW_ED_data.py` scripts (see the [workflow](#workflow) below).
+
 ## Workflow
 
 The program works this way:
 
-1. Run `get-mqtt-data.sh` to subscribe to the TTN MQTT API (**NOTE:**  *must* run before step 2)
+1. Run `get-mqtt-data.sh` to subscribe to the TTN [MQTT](https://en.wikipedia.org/wiki/MQTT) API (**NOTE:**  *must* run before step 2)
 2. Use `send_control_packets.py` to send the LoRa packets and take it's RSSI
 3. After completing steps 1 & 2, use `process_api_data.py` to extract the packet's ID & RSSI
 4. Execute `join_GW_ED_data.py` in order to get the RSSI measurements put together in one file
@@ -91,7 +99,7 @@ Please, refer to the [previous section](#running-the-program-on-linux-based-syst
 
 A: It provides an easy and standardized way to obtain RSSI measurements on both sides (ED & GW) of a LoRa communication.
 
-### Q2: The gateway is reporting RSSI correctly but the device measurements are frozen/locked. What is happenning?
+### Q2: The gateway is reporting RSSI correctly but the device measurements are frozen/locked. What may be happening?
 
 A: As you are getting measurements from both sides of the connection (ED & GW), you should send data (uplink) and receive something back on the device (downlink) in order to get signal emissions on both directions so to be able to get updated RSSI measurements on the device side too. It's possible to try to enable receiving ACKs if your LoRa device supports it.
 
@@ -109,7 +117,7 @@ A: If your android device is running android 8+, there are [some security implem
 
 ## Citing this work
 
-This source code was used as part of my Computer Science monography:
+This source code was used as part of my Computer Science monograph:
 
 De Oliveira, L. A. (2023). *Arcabouços para Coleta de RSSI e Evolução de Técnicas de Acordo de Chaves em Redes LoRaWAN.* Federal University of Juiz de Fora.
 
