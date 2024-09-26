@@ -117,21 +117,36 @@ A: If your android device is running android 8+, there are [some security implem
 
 ## Citing this work
 
-This source code was used as part of my Computer Science monograph:
+### Paper
+
+If you used our [dataset](https://github.com/oliveiraleo/LoRa-RSSI-dataset-outdoor) or any part of the source code, please, use the citation:
+
+L. Oliveira, L. Chaves, and E. Silva. "Explorando o RSSI na Geração de Chaves para LoRaWAN", in *Anais do XXIII Simpósio Brasileiro de Segurança da Informação e de Sistemas Computacionais*, Juiz de Fora/MG, 2023, pp. 1-14, doi: https://doi.org/10.5753/sbseg.2023.232890.
+
+Or use the BibTex citation below:
+
+```
+@inproceedings{sbseg,
+ author = {Leonardo Oliveira and Luciano Chaves and Edelberto Silva},
+ title = {Explorando o RSSI na Geração de Chaves para LoRaWAN},
+ booktitle = {Anais do XXIII Simpósio Brasileiro de Segurança da Informação e de Sistemas Computacionais},
+ location = {Juiz de Fora/MG},
+ year = {2023},
+ pages = {1--14},
+ publisher = {SBC},
+ address = {Porto Alegre, RS, Brasil},
+ doi = {10.5753/sbseg.2023.232890},
+ url = {https://sol.sbc.org.br/index.php/sbseg/article/view/27193}
+}
+```
+
+### Monograph
+
+This source code was also used as part of my Computer Science monograph (which is available [here](http://monografias.ice.ufjf.br/tcc-web/tcc?id=724)):
 
 De Oliveira, L. A. (2023). *Arcabouços para Coleta de RSSI e Evolução de Técnicas de Acordo de Chaves em Redes LoRaWAN.* Federal University of Juiz de Fora.
 
-Which is available [here](http://monografias.ice.ufjf.br/tcc-web/tcc?id=724).
-
-A paper was submitted and is under peer review, as soon as it's ready, I'll update the citation here.
-
-<!--If you used any of the source code available here, please, cite it as:
-
-De Oliveira, L. A. (2023). *Arcabouços para Coleta de RSSI e Evolução de Técnicas de Acordo de Chaves em Redes LoRaWAN.* Federal University of Juiz de Fora.
-
-### Latex citation
-
-Or you can use the Latex citation below:
+You may cite it using the BibTex code below:
 
 ```
 @phdthesis{leonardo2023arcaboucos,
@@ -143,7 +158,7 @@ Or you can use the Latex citation below:
  school = {Federal University of Juiz de Fora},
  key = {OLIVEIRA,2023}
 }
-``` -->
+```
 
 ## Acknowledgments
 
